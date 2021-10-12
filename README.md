@@ -142,9 +142,9 @@ Git Flow 정책 기반
       </p>
     </div>
     <div class="feature-item">
-      <h3 class="feature-name"> 04. 메세지/파일 관리 </h3>
+      <h3 class="feature-name"> 04. 메세지/파일 관리 기능 </h3>
       <p class="feature-detail">
-        * 텍스트 메세지 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+        * 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
         &emsp; - 유저가 본인이 보낸 메세지 삭제하는 기능<br>
         &emsp; - 텍스트 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
         * 파일 목록 조회<br>
