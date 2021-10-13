@@ -208,7 +208,7 @@ Git Flow 정책 기반
             &emsp;- Client로부터 Request를 받고, 해당 룸에 "userNick:메세지" broadcast<br>
             &emsp;- Client에 처리결과(Success면 MsgId, msgCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 3-2. 파일 전송<br>
-            &emsp;- Client로부터 Request를 받고, Client의 파일을 해당 룸으로 전송<br>
+            &emsp;- Client로부터 Request를 받고, 파일 채널 생성 후 해당 룸으로 전송<br>
             &emsp;- 해당 파일에 FileId 부여<br>
             &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 MsgId 부여<br>
             &emsp;- Client에 처리결과(Success면 MsgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
@@ -225,7 +225,7 @@ Git Flow 정책 기반
             &emsp;- 해당 룸에서 각 파일에 대한 정보를 요청자에게만 출력<br>
             &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 4-3. 파일 다운로드<br>
-            &emsp;- Client로부터 request를 받고, 룸 안의 해당 파일을 FileId로 찾아 Client에게 전송<br>
+            &emsp;- Client로부터 request를 받고, 룸 안의 해당 파일을 FileId로 찾아 파일 채널을 통해 Client에게 전송<br>
             &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
             &emsp;- Client로부터 request를 받고, 해당 파일을 FileId로 찾아 룸에서 삭제<br>
@@ -260,8 +260,8 @@ Git Flow 정책 기반
             &emsp;- Server에 Request<br><br>
         * 3-2. 파일 전송<br>
             &emsp;- '파일 전송' 선택<br>
-            &emsp;- roomId + 파일(위치?) 작성<br>
-            &emsp;- Server에 Request<br>
+            &emsp;- roomId + 파일 이름 작성<br>
+            &emsp;- Server에 Request -> 파일 채널을 통해 전송<br>
     </p>
     </div>
     <div class="client-side-impl-item">
@@ -278,7 +278,7 @@ Git Flow 정책 기반
         * 4-3. 파일 다운로드<br>
             &emsp;- '파일 다운로드' 선택<br>
             &emsp;- fileId 작성<br>
-            &emsp;- Server에 Request<br><br>
+            &emsp;- Server에 Request -> 파일 채널을 통해 다운로드<br><br>
         * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
             &emsp;- '파일 삭제' 선택<br>
             &emsp;- fileId 작성<br>
