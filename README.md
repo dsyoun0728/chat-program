@@ -228,3 +228,20 @@ Git Flow 정책 기반
     </div>
   </div>
 </details>
+
+## Request/Response Table
+| 기능 | Request | Response |
+| ------ | ------------- |-------------- |
+| 1-1. 로그인 | ip, port, userId, userNick | 성공여부, roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime) 에 대한 Map (key, value) |
+| 1-2. 로그아웃 | userId, userNick | 성공여부 |
+| 1-3. 서버연결끊김 | X | 연결 끊겼다는걸 알려주는 flag...? |
+| 2-1. 유저 조회 (룸 생성) | 룸 생성 flag | 성공여부, 모든 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-2. 룸 생성 | userId, userNick에 대한 Map | 성공여부, roomId, roomNick, (roomCreateTime) |
+| 2-3. 룸 입장 | userId, userNick, roomId | 성공여부 |
+| 2-4. 유저 조회 (룸 초대) | userId, userNick, roomId, 룸 초대 flag | 성공여부, 모든 유저의 userId, userNick, isMember, isLogin에 대한 Map (key, value) |
+| 2-5. 룸 초대 | roomId와 userId, userNick에 대한 Map | 성공여부 |
+| 2-6. 유저 조회 (추방) (관리자만) |  userId, userNick, roomId, 룸 추방 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-7. 추방 (관리자만) | roomId와 userId, userNick에 대한 Map | 성공여부 |
+| 2-8. 룸 탈퇴 | roomId, userId, userNick | 성공여부, (룸 관리자의 경우 성공여부 false와 함께 탈퇴 불가 flag) |
+| 2-9. 유저 조회 (탈퇴) (관리자만) | userId, userNick, roomId, 룸 탈퇴 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map |
+| 2-10. 관리자 권한 양도 (관리자만) | roomId, 본인과 양도할 userId, userNick | 성공여부 (룸 탈퇴 진행) |
