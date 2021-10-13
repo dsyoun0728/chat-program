@@ -134,10 +134,7 @@ Git Flow 정책 기반
       <p class="feature-detail">
         * 텍스트 메세지 전송<br>
         &emsp; - 텍스트 전송 & 텍스트 id를 가짐 (메세지 길이 제한은...?)<br>
-        &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 텍스트 broadcast<br>
-          - Request = Text ID + "텍스트 메세지 전송에 대한 Request Number" + 요청자ID + 방번호 + 메세지<br>
-          - Server = 해당 방에 메세지 broadcast -> Client에 Response<br>
-          - Response = Text ID + "텍스트 메세지 전송에 대한 Request Number" + 처리결과<br><br>
+        &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 텍스트 broadcast<br><br>
         * 파일 전송<br>
         &emsp; - byte로 변환하여 보낼 예정이므로 확장자 제한은 없을 것 (byte 길이 제한은...?)<br>
         &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 '파일명.확장자' 텍스트로 broadcast<br>
@@ -180,8 +177,37 @@ Git Flow 정책 기반
       <p class="server-side-impl-detail"> 설명 </p>
     </div>
     <div class="server-side-impl-item">
-      <h3 class="server-side-impl-name"> 03. ㅇㅇ </h3>
-      <p class="server-side-impl-detail"> 설명 </p>
+      <h3 class="server-side-impl-name"> 03. 전송 관련 기능 </h3>
+      <p class="server-side-impl-detail"> 
+        * 텍스트 메세지 전송<br>
+            - 해당 룸에 메세지 broadcast -> Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
+            - Response = Text ID + '텍스트 메세지 전송'에 대한 Request Number + 처리결과<br><br>
+        * 파일 전송<br>
+            - 해당 룸에 파일 업로드 -> 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
+            - Response = Text ID + '파일 전송'에 대한 Request Number + 처리결과<br><br>
+      </p>
+    </div>
+    <div class="server-side-impl-item">
+      <h3 class="server-side-impl-name"> 04. 메세지/파일 관리 기능 </h3>
+      <p class="server-side-impl-detail"> 
+        * 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+	        - 텍스트 id를 확인하여 삭제하고 해당 룸에 broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br>
+	        - Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
+	        - Response = Text ID + '텍스트 메세지 삭제'의 Request Number + 처리결과<br><br>
+        * 파일 목록 조회<br>
+            - 파일 수, 파일명, 파일 크기, 확장자, 업로드한 날짜, 텍스트 id 정보 조회<br>
+            - 각 파일에 대한 정보(텍스트 id 제외)를 한 눈에 요청자에게 Response<br>
+            - Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
+            - Response = Text ID + '파일 목록 조회'의 Request Number + 처리결과 + 위의 목록 내용<br><br>
+        * 파일 다운로드<br>
+            - Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
+            - Response = Text ID + '파일 다운로드'의 Request Number + 처리결과 + 파일<br>
+        * 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+            - 해당 파일 삭제 -> 해당 룸에 '파일명 삭제되었습니다' broadcast<br>
+            - 해당 파일을 업로드한 텍스트 ID를 확인하여 메세지 삭제<br>
+            - Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
+            - Response = Text ID + '파일 삭제'의 Request Number + 처리결과<br><br>
+      </p>
     </div>
   </div>
 </details>
@@ -201,8 +227,26 @@ Git Flow 정책 기반
       <p class="client-side-impl-detail"> 설명 </p>
     </div>
     <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 03. ㅇㅇ </h3>
-      <p class="client-side-impl-detail"> 설명 </p>
+      <h3 class="client-side-impl-name"> 03. 전송 관련 기능 </h3>
+      <p class="client-side-impl-detail">
+        * 텍스트 메세지 전송<br>
+	        - Request = '텍스트 메세지 전송'의 Request Number + 요청자ID + 룸번호 + 메세지<br>
+        * 파일 전송<br>
+            - Request = '파일 전송'의 Request Number + 요청자ID + 룸번호 + 파일<br><br>
+    </p>
+    </div>
+    <div class="client-side-impl-item">
+      <h3 class="client-side-impl-name"> 04. 메세지/파일 관리 기능 </h3>
+      <p class="client-side-impl-detail">
+        * 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+	        - Request = '텍스트 메세지 삭제'의 Request Number + 요청자ID + 룸번호<br>
+        * 파일 목록 조회<br>
+            - Request = '파일 목록 조회'의 Request Number + 요청자ID + 룸번호<br>
+        * 파일 다운로드<br>
+            - Request = '파일 다운로드'의 Request Number + 요청자ID + 룸번호 + 파일 이름<br>
+        * 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+            - Request = '파일 삭제'의 Request Number + 요청자ID + 룸번호 + 파일 이름<br>
+    </p>
     </div>
   </div>
 </details>
