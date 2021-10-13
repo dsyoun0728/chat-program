@@ -134,7 +134,10 @@ Git Flow 정책 기반
       <p class="feature-detail">
         * 텍스트 메세지 전송<br>
         &emsp; - 텍스트 전송 & 텍스트 id를 가짐 (메세지 길이 제한은...?)<br>
-        &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 텍스트 broadcast<br><br>
+        &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 텍스트 broadcast<br>
+          - Request = Text ID + "텍스트 메세지 전송에 대한 Request Number" + 요청자ID + 방번호 + 메세지<br>
+          - Server = 해당 방에 메세지 broadcast -> Client에 Response<br>
+          - Response = Text ID + "텍스트 메세지 전송에 대한 Request Number" + 처리결과<br><br>
         * 파일 전송<br>
         &emsp; - byte로 변환하여 보낼 예정이므로 확장자 제한은 없을 것 (byte 길이 제한은...?)<br>
         &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 '파일명.확장자' 텍스트로 broadcast<br>
