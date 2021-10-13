@@ -169,12 +169,37 @@ Git Flow 정책 기반
   </summary>  
   <div class="server-side-impl-list">    
     <div class="server-side-impl-item">
-      <h3 class="server-side-impl-name"> 01. ㅇㅇ </h3>
-      <p class="server-side-impl-detail"> 설명 </p>
+      <h3 class="server-side-impl-name"> 01. 로그인/로그아웃 </h3>
+      <p class="server-side-impl-detail">
+        * 1-1. 로그인<br>
+        &emsp; - 클라이언트의 로그인 시도 시 Socket을 맺고 해당 유저가 이미 대화를 나눴던 방들에 대한 정보 response<br>
+        &emsp; &emsp; - roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime 등)에 대한 Map...?<br>
+        &emsp; - 한 번 로그인하면 userId, userNick을 매번 protocol에 담지 않을 수 있도록 Socket 클래스의 하위 클래스 구현할 것 <br><br>
+        * 1-2. 로그아웃<br>
+        &emsp; - 클라이언트의 로그아웃 시도 시 Socket을 끊고 성공여부 response<br><br>
+        * 1-3. 서버연결끊김<br>
+        &emsp; - 연결이 끊겼는데 이를 알려주는 flag를 response...?
+      </p>
     </div>
     <div class="server-side-impl-item">
-      <h3 class="server-side-impl-name"> 02. ㅇㅇ </h3>
-      <p class="server-side-impl-detail"> 설명 </p>
+      <h3 class="server-side-impl-name"> 02. 룸 관련 기능 </h3>
+      <p class="server-side-impl-detail">
+        * 2-1. 유저 조회 (룸 생성)<br>
+        &emsp; - 클라이언트의 요청을 받으면 모든 유저에 대한 정보 response<br>
+        &emsp; &emsp; - userId, userNick, isLogin에 대한 Map...?<br><br>
+        * 2-2. 룸 생성<br>
+        &emsp; - 클라이언트로부터 받은 유저 목록을 통해 룸 생성<br>
+        &emsp; - 기존의 roomId와 겹치지 않는 roomId 생성 및 정해진 명명 규칙에 따라 roomNick 정하여 response<br><br>
+        &emsp; &emsp; - roomId, roomNick, (roomCreateTime)에 대한 Map...?<br><br>
+        * 2-3.  룸 입장<br>
+        &emsp; - roomId를 통해 해당 룸에 누가 입장했는지 broadcast<br>
+        &emsp; - 이 때, Socket 하위 클래스에서 들고있는 userNick을 이용하여 누가 입장했는지 알려주면 됨<br><br>
+        * 2.4. 유저 조회 (룸 초대)<br>
+        &emsp; - roomId를 통해 모든 유저에 대한 정보 response<br>
+        &emsp;&emsp; - userId, userNick, isMember, isLogin에 대한 Map<br><br>
+        * 2.5 룸 초대<br>
+        &emsp; - 클라이언트로부터 받은 roomId와 유저 목록을 통해 룸에 유저 초대 후 성공여부 response<br>
+      </p>
     </div>
     <div class="server-side-impl-item">
       <h3 class="server-side-impl-name"> 03. ㅇㅇ </h3>
@@ -190,11 +215,11 @@ Git Flow 정책 기반
   </summary>  
   <div class="client-side-impl-list">    
     <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 01. ㅇㅇ </h3>
+      <h3 class="client-side-impl-name"> 01. 로그인/로그아웃 </h3>
       <p class="client-side-impl-detail"> 설명 </p>
     </div>
     <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 02. ㅇㅇ </h3>
+      <h3 class="client-side-impl-name"> 02. 룸 관련 기능 </h3>
       <p class="client-side-impl-detail"> 설명 </p>
     </div>
     <div class="client-side-impl-item">
