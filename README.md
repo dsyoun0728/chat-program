@@ -204,34 +204,34 @@ Git Flow 정책 기반
     <div class="server-side-impl-item">
       <h3 class="server-side-impl-name"> 03. 전송 관련 기능 </h3>
       <p class="server-side-impl-detail"> 
-        * 텍스트 메세지 전송<br>
-        &emsp;- 해당 룸에 메세지 broadcast -> Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
-        &emsp;- Response = Text ID + '텍스트 메세지 전송'에 대한 Request Number + 처리결과<br><br>
-        * 파일 전송<br>
-        &emsp;- 해당 룸에 파일 업로드 -> 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
-        &emsp;- Response = Text ID + '파일 전송'에 대한 Request Number + 처리결과<br><br>
+        * 3-1. 텍스트 메세지 전송<br>
+            &emsp;- Client로부터 Request를 받고, 해당 룸에 "userNick:메세지" broadcast<br>
+            &emsp;- Client에 처리결과(Success면 MsgId, msgCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        * 3-2. 파일 전송<br>
+            &emsp;- Client로부터 Request를 받고, Client의 파일을 해당 룸으로 전송<br>
+            &emsp;- 해당 파일에 FileId 부여<br>
+            &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 MsgId 부여<br>
+            &emsp;- Client에 처리결과(Success면 MsgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
       </p>
     </div>
     <div class="server-side-impl-item">
       <h3 class="server-side-impl-name"> 04. 메세지/파일 관리 기능 </h3>
       <p class="server-side-impl-detail"> 
-        * 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
-	        &emsp;- 텍스트 id를 확인하여 삭제하고 해당 룸에 broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br>
-	        &emsp;- Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
-	        &emsp;- Response = Text ID + '텍스트 메세지 삭제'의 Request Number + 처리결과<br><br>
-        * 파일 목록 조회<br>
-            &emsp;- 파일 수, 파일명, 파일 크기, 확장자, 업로드한 날짜, 텍스트 id 정보 조회<br>
-            &emsp;- 각 파일에 대한 정보(텍스트 id 제외)를 한 눈에 요청자에게 Response<br>
-            &emsp;- Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
-            &emsp;- Response = Text ID + '파일 목록 조회'의 Request Number + 처리결과 + 위의 목록 내용<br><br>
-        * 파일 다운로드<br>
-            &emsp;- Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
-            &emsp;- Response = Text ID + '파일 다운로드'의 Request Number + 처리결과 + 파일<br><br>
-        * 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
-            &emsp;- 해당 파일 삭제 -> 해당 룸에 '파일명 삭제되었습니다' broadcast<br>
-            &emsp;- 해당 파일을 업로드한 텍스트 ID를 확인하여 메세지 삭제<br>
-            &emsp;- Client에 처리결과(Success면 Text ID 부여/Fail이면 에러 출력) Response<br>
-            &emsp;- Response = Text ID + '파일 삭제'의 Request Number + 처리결과<br><br>
+        * 4-1. 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+            &emsp;- Client로부터 request를 받고, MsgId를 확인하여 삭제하고, 해당 룸에 broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br>
+            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        * 4-2. 파일 목록 조회<br>
+            &emsp;- Client로부터 request를 받고 해당 룸에서 파일명, 파일 크기, 확장자, 업로드한 날짜에 대한 Map 조회<br>
+            &emsp;- 해당 룸에서 각 파일에 대한 정보를 요청자에게만 출력<br>
+            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        * 4-3. 파일 다운로드<br>
+            &emsp;- Client로부터 request를 받고, 룸 안의 해당 파일을 FileId로 찾아 Client에게 전송<br>
+            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+            &emsp;- Client로부터 request를 받고, 해당 파일을 FileId로 찾아 룸에서 삭제<br>
+            &emsp;- 해당 룸에 '파일명:삭제되었습니다' broadcast<br>
+            &emsp;- 해당 파일을 broadcast한 MsgId를 확인하여 메세지 삭제<br>
+            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response
       </p>
     </div>
   </div>
@@ -254,23 +254,35 @@ Git Flow 정책 기반
     <div class="client-side-impl-item">
       <h3 class="client-side-impl-name"> 03. 전송 관련 기능 </h3>
       <p class="client-side-impl-detail">
-        * 텍스트 메세지 전송<br>
-	        &emsp;- Request = '텍스트 메세지 전송'의 Request Number + 요청자ID + 룸번호 + 메세지<br><br>
-        * 파일 전송<br>
-            &emsp;- Request = '파일 전송'의 Request Number + 요청자ID + 룸번호 + 파일<br><br>
+        * 3-1. 텍스트 메세지 전송<br>
+            &emsp;- '텍스트 메세지 전송' 선택<br>
+            &emsp;- roomId + text내용 작성<br> 
+            &emsp;- Server에 Request<br><br>
+        * 3-2. 파일 전송<br>
+            &emsp;- '파일 전송' 선택<br>
+            &emsp;- roomId + 파일(위치?) 작성<br>
+            &emsp;- Server에 Request<br>
     </p>
     </div>
     <div class="client-side-impl-item">
       <h3 class="client-side-impl-name"> 04. 메세지/파일 관리 기능 </h3>
       <p class="client-side-impl-detail">
-        * 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
-	        &emsp;- Request = '텍스트 메세지 삭제'의 Request Number + 요청자ID + 룸번호<br><br>
-        * 파일 목록 조회<br>
-            &emsp;- Request = '파일 목록 조회'의 Request Number + 요청자ID + 룸번호<br><br>
-        * 파일 다운로드<br>
-            &emsp;- Request = '파일 다운로드'의 Request Number + 요청자ID + 룸번호 + 파일 이름<br><br>
-        * 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
-            &emsp;- Request = '파일 삭제'의 Request Number + 요청자ID + 룸번호 + 파일 이름<br><br>
+        * 4-1. 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+            &emsp;- '텍스트 메세지 삭제' 선택<br>
+            &emsp;- MsgId 작성<br>
+            &emsp;- Server에 Request<br><br>
+        * 4-2. 파일 목록 조회<br>
+            &emsp;- '파일 목록 조회' 선택<br>
+            &emsp;- rooId 작성<br>
+            &emsp;- Server에 Request<br><br>
+        * 4-3. 파일 다운로드<br>
+            &emsp;- '파일 다운로드' 선택<br>
+            &emsp;- fileId 작성<br>
+            &emsp;- Server에 Request<br><br>
+        * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
+            &emsp;- '파일 삭제' 선택<br>
+            &emsp;- fileId 작성<br>
+            &emsp;- Server에 Request
     </p>
     </div>
   </div>
