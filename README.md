@@ -133,12 +133,12 @@ Git Flow 정책 기반
       <h3 class="feature-name"> 03. 전송 관련 기능 </h3>
       <p class="feature-detail">
         * 텍스트 메세지 전송<br>
-        &emsp; - 텍스트 전송 & 텍스트 id를 가짐 (메세지 길이 제한은...?)<br>
+        &emsp; - 텍스트 전송 & 메세지 id를 가짐 (메세지 길이 제한은...?)<br>
         &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 텍스트 broadcast<br><br>
         * 파일 전송<br>
         &emsp; - byte로 변환하여 보낼 예정이므로 확장자 제한은 없을 것 (byte 길이 제한은...?)<br>
         &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 '파일명.확장자' 텍스트로 broadcast<br>
-        &emsp;&emsp; - 즉, 룸에서 볼 때는 텍스트 메세지와 동일하며 텍스트 id를 가짐<br><br>
+        &emsp;&emsp; - 즉, 룸에서 볼 때는 텍스트 메세지와 동일하며 메세지 id를 가짐<br><br>
       </p>
     </div>
     <div class="feature-item">
@@ -146,21 +146,43 @@ Git Flow 정책 기반
       <p class="feature-detail">
         * 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
         &emsp; - 유저가 본인이 보낸 메세지 삭제하는 기능<br>
-        &emsp; - 텍스트 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
+        &emsp; - 메세지 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
         * 파일 목록 조회<br>
         &emsp; - 룸에 업로드된 파일 목록 조회 기능<br>
-        &emsp; - 파일 수, 파일명, 파일 크기, 확장자, 업로드한 날짜, 텍스트 id 정보 조회<br>
-        &emsp;&emsp; - 각 파일에 대한 정보(텍스트 id 제외)를 한 눈에 보여줄 수 있도록 함<br><br>
+        &emsp; - 파일 수, 파일명, 파일 크기, 확장자, 업로드한 날짜 정보 조회<br>
+        &emsp;&emsp; - 각 파일에 대한 정보를 한 눈에 보여줄 수 있도록 함<br><br>
         * 파일 다운로드<br>
         &emsp; - 조회한 목록 중 원하는 파일을 선택하여 다운로드할 수 있도록 하는 기능<br><br>
         * 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
         &emsp; - 조회한 목록 중 원하는 파일을 선택하여 삭제할 수 있도록 하는 기능<br>
-        &emsp; - 해당 파일을 업로드한 텍스트 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
+        &emsp; - 해당 파일을 업로드한 메세지 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
       </p>
     </div>
   </div>
 </details>
 
+## Request/Response Table
+| 기능 | Request | Response |
+| ------ | ------------- |-------------- |
+| 1-1. 로그인 | ip, port, userId, userNick | 성공여부, roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime) 에 대한 Map (key, value) |
+| 1-2. 로그아웃 | X | 성공여부 |
+| 1-3. 서버연결끊김 | X | 연결 끊겼다는걸 알려주는 flag...? |
+| 2-1. 유저 조회 (룸 생성) | 룸 생성 flag | 성공여부, 모든 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-2. 룸 생성 | 룸 생성할 userId, userNick에 대한 Map | 성공여부, roomId, roomNick, (roomCreateTime) |
+| 2-3. 룸 입장 | roomId | 성공여부 |
+| 2-4. 유저 조회 (룸 초대) | roomId, 룸 초대 flag | 성공여부, 모든 유저의 userId, userNick, isMember, isLogin에 대한 Map (key, value) |
+| 2-5. 룸 초대 | roomId와 초대할 userId, userNick에 대한 Map | 성공여부 |
+| 2-6. 유저 조회 (추방) (관리자만) |  roomId, 룸 추방 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-7. 추방 (관리자만) | roomId와 추방할 userId, userNick에 대한 Map | 성공여부 |
+| 2-8. 룸 탈퇴 | roomId | 성공여부, (룸 관리자의 경우 성공여부 false와 함께 탈퇴 불가 flag) |
+| 2-9. 유저 조회 (탈퇴) (관리자만) | roomId, 룸 탈퇴 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map |
+| 2-10. 관리자 권한 양도 (관리자만) | roomId, 본인과 양도할 userId, userNick | 성공여부 (룸 탈퇴 진행) |
+| 3-1. 텍스트 메세지 전송 | roomId, text(이건 어떻게...?) | 성공여부, msgId, msgCreateTime |
+| 3-2. 파일 전송 | roomId, file(fileName, fileExt 등 / 이건 어떻게...?)  | 성공여부, msgId, fileId, fileCreateTime에 대한 Map |
+| 4-1. 텍스트 메세지 삭제 | roomId, msgId | 성공여부 |
+| 4-2. 파일 목록 조회 | roomId | 성공여부, fileId, fileNum, fileName, fileExt, fileSize, fileCreateTime에 대한 Map |
+| 4-3. 파일 다운로드 | fileId 리스트 | 성공여부 | 
+| 4-4. 파일 삭제 | fileId 리스트 | 성공여부 |
 
 ## Server side implementation
 <details>
@@ -275,20 +297,3 @@ Git Flow 정책 기반
     </div>
   </div>
 </details>
-
-## Request/Response Table
-| 기능 | Request | Response |
-| ------ | ------------- |-------------- |
-| 1-1. 로그인 | ip, port, userId, userNick | 성공여부, roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime) 에 대한 Map (key, value) |
-| 1-2. 로그아웃 | userId, userNick | 성공여부 |
-| 1-3. 서버연결끊김 | X | 연결 끊겼다는걸 알려주는 flag...? |
-| 2-1. 유저 조회 (룸 생성) | 룸 생성 flag | 성공여부, 모든 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
-| 2-2. 룸 생성 | userId, userNick에 대한 Map | 성공여부, roomId, roomNick, (roomCreateTime) |
-| 2-3. 룸 입장 | userId, userNick, roomId | 성공여부 |
-| 2-4. 유저 조회 (룸 초대) | userId, userNick, roomId, 룸 초대 flag | 성공여부, 모든 유저의 userId, userNick, isMember, isLogin에 대한 Map (key, value) |
-| 2-5. 룸 초대 | roomId와 userId, userNick에 대한 Map | 성공여부 |
-| 2-6. 유저 조회 (추방) (관리자만) |  userId, userNick, roomId, 룸 추방 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
-| 2-7. 추방 (관리자만) | roomId와 userId, userNick에 대한 Map | 성공여부 |
-| 2-8. 룸 탈퇴 | roomId, userId, userNick | 성공여부, (룸 관리자의 경우 성공여부 false와 함께 탈퇴 불가 flag) |
-| 2-9. 유저 조회 (탈퇴) (관리자만) | userId, userNick, roomId, 룸 탈퇴 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map |
-| 2-10. 관리자 권한 양도 (관리자만) | roomId, 본인과 양도할 userId, userNick | 성공여부 (룸 탈퇴 진행) |
