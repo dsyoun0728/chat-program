@@ -247,8 +247,8 @@ Git Flow 정책 기반
         * 3-2. 파일 전송<br>
         &emsp;- Client로부터 Request를 받고, 파일 채널 생성 후(?파일 채널은 Server와 접속시 이미 만들어져있나?) 해당 룸으로 전송<br>
         &emsp;- 해당 파일에 fileId 부여<br>
-        &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 MsgId 부여<br>
-        &emsp;- Client에 처리결과(Success면 MsgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
+        &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 msgId 부여<br>
+        &emsp;- Client에 처리결과(Success면 msgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
       </p>
     </div>
     <div class="server-side-impl-item">
@@ -350,7 +350,7 @@ Git Flow 정책 기반
       <p class="client-side-impl-detail">
         * 4-1. 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
             &emsp;- '텍스트 메세지 삭제' 선택<br>
-            &emsp;- MsgId 작성<br>
+            &emsp;- msgId 작성<br>
             &emsp;- Server에 Request<br><br>
             &emsp;- Response로 Success code 받을시 클라이언트 화면에 '메세지 삭제 완료' 출력
         * 4-2. 파일 목록 조회<br>
