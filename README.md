@@ -260,7 +260,7 @@ Git Flow 정책 기반
             &emsp;- Server에 Request<br><br>
         * 3-2. 파일 전송<br>
             &emsp;- '파일 전송' 선택<br>
-            &emsp;- roomId + 파일 이름 작성<br>
+            &emsp;- roomId + 파일 이름 + 작성<br>
             &emsp;- Server에 Request -> 파일 채널을 통해 전송(?파일 채널은 Server와 접속시 이미 만들어져있나?)<br>
     </p>
     </div>
@@ -281,7 +281,7 @@ Git Flow 정책 기반
             &emsp;- Server에 Request -> 파일 채널을 통해 다운로드<br><br>
         * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
             &emsp;- '파일 삭제' 선택<br>
-            &emsp;- rooId +  작성<br>
+            &emsp;- rooId + 파일 이름 작성<br>
             &emsp;- Server에 Request
     </p>
     </div>
