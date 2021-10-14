@@ -133,12 +133,12 @@ Git Flow 정책 기반
       <h3 class="feature-name"> 03. 전송 관련 기능 </h3>
       <p class="feature-detail">
         * 텍스트 메세지 전송<br>
-        &emsp; - 텍스트 전송 & 텍스트 id를 가짐 (메세지 길이 제한은...?)<br>
+        &emsp; - 텍스트 전송 & 메세지 id를 가짐 (메세지 길이 제한은...?)<br>
         &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 텍스트 broadcast<br><br>
         * 파일 전송<br>
         &emsp; - byte로 변환하여 보낼 예정이므로 확장자 제한은 없을 것 (byte 길이 제한은...?)<br>
         &emsp; - 누가 보냈는지에 대한 정보를 포함해 해당 룸에 '파일명.확장자' 텍스트로 broadcast<br>
-        &emsp;&emsp; - 즉, 룸에서 볼 때는 텍스트 메세지와 동일하며 텍스트 id를 가짐<br><br>
+        &emsp;&emsp; - 즉, 룸에서 볼 때는 텍스트 메세지와 동일하며 메세지 id를 가짐<br><br>
       </p>
     </div>
     <div class="feature-item">
@@ -146,21 +146,42 @@ Git Flow 정책 기반
       <p class="feature-detail">
         * 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
         &emsp; - 유저가 본인이 보낸 메세지 삭제하는 기능<br>
-        &emsp; - 텍스트 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
+        &emsp; - 메세지 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
         * 파일 목록 조회<br>
         &emsp; - 룸에 업로드된 파일 목록 조회 기능<br>
-        &emsp; - 파일 수, 파일명, 파일 크기, 확장자, 업로드한 날짜, 텍스트 id 정보 조회<br>
-        &emsp;&emsp; - 각 파일에 대한 정보(텍스트 id 제외)를 한 눈에 보여줄 수 있도록 함<br><br>
+        &emsp; - 파일 수, 파일명, 파일 크기, 확장자, 업로드한 날짜 정보 조회<br>
+        &emsp;&emsp; - 각 파일에 대한 정보를 한 눈에 보여줄 수 있도록 함<br><br>
         * 파일 다운로드<br>
         &emsp; - 조회한 목록 중 원하는 파일을 선택하여 다운로드할 수 있도록 하는 기능<br><br>
         * 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
         &emsp; - 조회한 목록 중 원하는 파일을 선택하여 삭제할 수 있도록 하는 기능<br>
-        &emsp; - 해당 파일을 업로드한 텍스트 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
+        &emsp; - 해당 파일을 업로드한 메세지 id를 확인하여 삭제하고 해당 룸에 id broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br><br>
       </p>
     </div>
   </div>
 </details>
 
+## Request/Response Table
+| 기능 | Client(Request) | Server(Response) |
+| ------ | ------------- |-------------- |
+| 1-1. 로그인 | serviceNum, ip, port, userId, userNick | 성공여부, roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime) 에 대한 Map (key, value) |
+| 1-2. 로그아웃 | serviceNum | 성공여부 |
+| 1-3. 서버연결끊김 | serviceNum | 연결 끊겼다는걸 알려주는 flag...? |
+| 2-1. 유저 조회 (룸 생성) | serviceNum | 성공여부, 모든 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-2. 룸 생성 | serviceNum, 룸 생성할 userId, userNick에 대한 Map | 성공여부, roomId, roomNick, ownerUserId, (roomCreateTime)에 대한 Map |
+| 2-3. 룸 입장 | serviceNum, roomId | 성공여부 |
+| 2-4. 유저 조회 (룸 초대) | serviceNum, roomId | 성공여부, 모든 유저의 userId, userNick, isMember, isLogin에 대한 Map (key, value) |
+| 2-5. 룸 초대 | serviceNum, roomId와 초대할 userId, userNick에 대한 Map | 성공여부 |
+| 2-6. 유저 조회 (추방) (관리자만) | serviceNum, roomId | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-7. 추방 (관리자만) | serviceNum, roomId와 추방할 userId, userNick에 대한 Map | 성공여부 |
+| 2-8. 룸 탈퇴 | serviceNum, roomId | 성공여부, (룸 관리자의 경우 성공여부 false와 함께 룸 내 유저의 userId, userNick, isLogin에 대한 Map) |
+| 2-9. 관리자 권한 양도 (관리자만) | serviceNum, roomId, 양도할 userId | 성공여부 (룸 탈퇴 진행) |
+| 3-1. 텍스트 메세지 전송 | serviceNum, roomId, text(이건 어떻게...?) | 성공여부, msgId, msgCreateTime |
+| 3-2. 파일 전송 | serviceNum, roomId, file(fileName, fileExt 등 / 이건 어떻게...?)  | 성공여부, msgId, fileId, fileCreateTime에 대한 Map |
+| 4-1. 텍스트 메세지 삭제 | serviceNum, roomId, msgId | 성공여부 |
+| 4-2. 파일 목록 조회 | serviceNum, roomId | 성공여부, fileId, fileNum, fileName, fileExt, fileSize, fileCreateTime에 대한 Map |
+| 4-3. 파일 다운로드 | serviceNum, fileId 리스트 | 성공여부 |
+| 4-4. 파일 삭제 | serviceNum, fileId 리스트 | 성공여부 |
 
 ## Server side implementation
 <details>
@@ -178,7 +199,7 @@ Git Flow 정책 기반
         * 1-2. 로그아웃<br>
         &emsp; - 클라이언트의 로그아웃 시도 시 Socket을 끊고 성공여부 response<br><br>
         * 1-3. 서버연결끊김<br>
-        &emsp; - 연결이 끊겼는데 이를 알려주는 flag를 response...?
+        &emsp; - 연결이 끊겼는데 이를 알려주는 flag를 response...?<br><br>
       </p>
     </div>
     <div class="server-side-impl-item">
@@ -189,49 +210,65 @@ Git Flow 정책 기반
         &emsp; &emsp; - userId, userNick, isLogin에 대한 Map...?<br><br>
         * 2-2. 룸 생성<br>
         &emsp; - 클라이언트로부터 받은 유저 목록을 통해 룸 생성<br>
-        &emsp; - 기존의 roomId와 겹치지 않는 roomId 생성 및 정해진 명명 규칙에 따라 roomNick 정하여 response<br><br>
-        &emsp; &emsp; - roomId, roomNick, (roomCreateTime)에 대한 Map...?<br><br>
+        &emsp; - 기존의 roomId와 겹치지 않는 roomId 생성 및 정해진 명명 규칙에 따라 roomNick 정하여 response<br>
+        &emsp;&emsp; - roomId, roomNick, ownerUserId, (roomCreateTime)에 대한 Map<br><br>
         * 2-3.  룸 입장<br>
+        &emsp; - roomMap에서 roomId key를 가진 룸에 대한 정보 request<br>
+        &emsp;&emsp; - roomId, roomNick, ownerUserId, (roomCreateTime)에 대한 Map<br>
         &emsp; - roomId를 통해 해당 룸에 누가 입장했는지 broadcast<br>
         &emsp; - 이 때, Socket 하위 클래스에서 들고있는 userNick을 이용하여 누가 입장했는지 알려주면 됨<br><br>
-        * 2.4. 유저 조회 (룸 초대)<br>
+        * 2-4. 유저 조회 (룸 초대)<br>
         &emsp; - roomId를 통해 모든 유저에 대한 정보 response<br>
         &emsp;&emsp; - userId, userNick, isMember, isLogin에 대한 Map<br><br>
-        * 2.5 룸 초대<br>
+        * 2-5. 룸 초대<br>
         &emsp; - 클라이언트로부터 받은 roomId와 유저 목록을 통해 룸에 유저 초대 후 성공여부 response<br>
+        &emsp; - roomId를 통해 해당 룸에 누가 초대됐는지 broadcast<br><br>
+        * 2-6. 유저 조회 (추방) (관리자만) <br>
+        &emsp; - roomId를 통해 룸 내 유저에 대한 정보 response<br>
+        &emsp;&emsp; - userId, userNick, isLogin에 대한 Map<br><br>
+        * 2-7. 추방 (관리자만) <br>
+        &emsp; - roomId와 추방할 유저의 userId를 통해 유저 추방 후 성공여부 response<br>
+        &emsp; - roomId를 통해 해당 룸에서 누가 추방됐는지 broadcast<br><br>
+        * 2-8. 룸 탈퇴 <br>
+        &emsp; - roomId로 roomMap에서 관리자인지 아닌지 파악<br>
+        &emsp; - 관리자가 아닌 경우 탈퇴처리하여 성공여부 response<br>
+        &emsp; - 관리자인 경우 성공여부 false 처리하고, roomId를 통해 룸 내 유저에 대한 정보 response<br>
+        &emsp;&emsp; - userId, userNick, isLogin에 대한 Map<br><br>
+        * 2-9. 관리자 권한 양도 (관리자만) <br>
+        &emsp; - roomId와 관리자의 userId, 양도할 userId를 통해 roomMap에서 ownerUserId 변경하고 기존 관리자 탈퇴 처리 후 성공여부 response<br><br>
       </p>
     </div>
     <div class="server-side-impl-item">
       <h3 class="server-side-impl-name"> 03. 전송 관련 기능 </h3>
       <p class="server-side-impl-detail"> 
         * 3-1. 텍스트 메세지 전송<br>
-            &emsp;- Client로부터 Request를 받고, 해당 룸에 "userNick:메세지" broadcast<br>
-            &emsp;- Client에 처리결과(Success면 MsgId, msgCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        &emsp;- Client로부터 Request를 받고, 해당 룸에 "userNick:메세지" broadcast<br>
+        &emsp;- Client에 처리결과(Success면 MsgId, msgCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 3-2. 파일 전송<br>
-            &emsp;- Client로부터 Request를 받고, 파일 채널 생성 후(?파일 채널은 Server와 접속시 이미 만들어져있나?) 해당 룸으로 전송<br>
-            &emsp;- 해당 파일에 FileId 부여<br>
-            &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 MsgId 부여<br>
-            &emsp;- Client에 처리결과(Success면 MsgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
+        &emsp;- Client로부터 Request를 받고, 파일 채널 생성 후(?파일 채널은 Server와 접속시 이미 만들어져있나?) 해당 룸으로 전송<br>
+        &emsp;- 해당 파일에 FileId 부여<br>
+        &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 MsgId 부여<br>
+        &emsp;- Client에 처리결과(Success면 MsgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
       </p>
     </div>
     <div class="server-side-impl-item">
       <h3 class="server-side-impl-name"> 04. 메세지/파일 관리 기능 </h3>
       <p class="server-side-impl-detail"> 
         * 4-1. 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
-            &emsp;- Client로부터 request를 받고, MsgId를 확인하여 삭제하고, 해당 룸에 broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br>
-            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        &emsp;- Client로부터 request를 받고, msgId를 확인하여 삭제하고, 해당 룸에 broadcast하여 '삭제된 메세지입니다.'로 변경할 수 있도록 함<br>
+        &emsp;- Client에 처리결과(Success면 msgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 4-2. 파일 목록 조회<br>
-            &emsp;- Client로부터 request를 받고 해당 룸에서 파일명, 파일 크기, 확장자, 업로드한 날짜에 대한 Map 조회<br>
-            &emsp;- 해당 룸에서 각 파일에 대한 정보를 요청자에게만 출력<br>
-            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        &emsp;- Client로부터 request를 받고 해당 룸에서 파일명, 파일 크기, 확장자, 업로드한 날짜에 대한 Map 조회<br>
+        &emsp;- 해당 룸에서 각 파일에 대한 정보를 요청자에게만 출력<br>
+        &emsp;- Client에 처리결과(Success면 msgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 4-3. 파일 다운로드<br>
-            &emsp;- Client로부터 request를 받고, 룸 안의 해당 파일을 FileId로 찾아 파일 채널을 통해 Client에게 전송<br>
-            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        &emsp;- Client로부터 request를 받고, 룸 안의 해당 파일을 fileId로 찾아 파일 채널을 통해 Client에게 전송<br>
+        &emsp;- Client에 처리결과(Success면 msgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
-            &emsp;- Client로부터 request를 받고, 해당 파일을 FileId로 찾아 룸에서 삭제<br>
-            &emsp;- 해당 룸에 '파일명:삭제되었습니다' broadcast<br>
-            &emsp;- 해당 파일을 broadcast한 MsgId를 확인하여 메세지 삭제<br>
-            &emsp;- Client에 처리결과(Success면 MsgId 부여 후 성공 코드 / Fail이면 에러 코드) Response
+        &emsp;- Client로부터 request를 받고, 해당 파일을 fileId로 찾아 룸에서 삭제<br>
+        &emsp;- 해당 룸에 '파일명:삭제되었습니다' broadcast<br>
+        &emsp;- 해당 파일을 broadcast한 msgId를 확인하여 메세지 삭제<br>
+        &emsp;- Client에 처리결과(Success면 msgId 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
       </p>
     </div>
   </div>
@@ -245,11 +282,53 @@ Git Flow 정책 기반
   <div class="client-side-impl-list">    
     <div class="client-side-impl-item">
       <h3 class="client-side-impl-name"> 01. 로그인/로그아웃 </h3>
-      <p class="client-side-impl-detail"> 설명 </p>
+      <p class="client-side-impl-detail">
+        * 1-1. 로그인<br>
+        &emsp; - 접속하고자하는 서버의 ip, port, 로그인하고자하는 userId와 사용하고자하는 userNick 입력하여 request<br>
+        &emsp;&emsp; - userId는 unique key로써 식별하는데 쓰이고, userNick은 로그인 시마다 다르게 하면 기존 userNick 대체 (key-value 쌍)<br>
+        &emsp; - socket의 하위 클래스를 구현하여 userId와 userNick을 저장해놓음<br>
+        &emsp; - reponse로 온 roomMap을 바탕으로 룸 목록 그리기<br><br>
+        * 1-2. 로그아웃<br>
+        &emsp; - 로그아웃 버튼 클릭 시 서버에 로그아웃 서비스 호출<br>
+        &emsp; - 로그아웃 성공 시 로그인 화면으로 변경 <br><br>
+        * 1-3. 서버연결끊김<br>
+        &emsp; - 어떻게 해야할지 아직 모르는 상황<br><br>
+      </p>
     </div>
     <div class="client-side-impl-item">
       <h3 class="client-side-impl-name"> 02. 룸 관련 기능 </h3>
-      <p class="client-side-impl-detail"> 설명 </p>
+      <p class="client-side-impl-detail">
+        * 2-1. 유저 조회 (룸 생성)<br>
+        &emsp; - 서버에 룸 생성을 위한 유저 조회 서비스 호출<br>
+        &emsp; - response로 온 userMap을 바탕으로 유저 목록 체크박스로 그리기<br><br>
+        * 2-2. 룸 생성<br>
+        &emsp; - 룸 생성할 유저 목록을 서버에 request<br>
+        &emsp; - response로 온 roomMap을 바탕으로 룸 목록 갱신 및 해당 룸에 입장<br><br>
+        * 2-3.  룸 입장<br>
+        &emsp; - 입장하고자 하는 룸 클릭하며 해당 roomId를 서버에 request<br>
+        &emsp; - 입장 성공 시 채팅창 화면으로 이동<br><br>
+        * 2-4. 유저 조회 (룸 초대)<br>
+        &emsp; - 해당 룸의 roomId를 서버에 request<br>
+        &emsp; - response로 온 userMap을 바탕으로 유저 목록 체크박스로 그리기<br>
+        &emsp;&emsp; - 이 때 룸 멤버에 대해서는 체크박스 disable처리<br><br>
+        * 2-5. 룸 초대<br>
+        &emsp; - 해당 룸의 roomId와 초대할 유저에 대한 userMap을 서버에 request<br>
+        &emsp; - 룸 초대 성공 시 채팅창 화면으로 이동<br><br>
+        * 2-6. 유저 조회 (추방) (관리자만) <br>
+        &emsp; - 추방 메뉴 자체는 userId == ownerUserId 인 경우에만 보이도록 함<br>
+        &emsp; - 해당 룸의 roomId를 서버에 request<br>
+        &emsp; - response로 온 룸 멤버에 대한 userMap을 바탕으로 유저 목록 체크박스로 그리기<br><br>
+        * 2-7. 추방 (관리자만) <br>
+        &emsp; - 해당 룸의 roomId와 추방할 유저에 대한 userMap을 서버에 request<br>
+        &emsp; - 추방 성공 시 채팅창 화면으로 이동<br><br>
+        * 2-8. 룸 탈퇴 <br>
+        &emsp; - 해당 룸의 roomId를 서버에 request<br>
+        &emsp; - 관리자가 아닌 경우 탈퇴 성공하면 룸 목록 갱신 및 이동<br>
+        &emsp; - 관리자인 경우 response로 온 룸 멤버에 대한 userMap을 바탕으로 유저 목록 체크박스로 그리기<br><br>
+        * 2-9. 관리자 권한 양도 (관리자만) <br>
+        &emsp; - roomId와 양도할 userId를 서버에 request<br>
+        &emsp; - 관리자 양도 및 탈퇴 성공 시 룸 목록 갱신 및 이동<br><br>
+      </p>
     </div>
     <div class="client-side-impl-item">
       <h3 class="client-side-impl-name"> 03. 전송 관련 기능 </h3>
@@ -287,20 +366,3 @@ Git Flow 정책 기반
     </div>
   </div>
 </details>
-
-## Request/Response Table
-| 기능 | Request | Response |
-| ------ | ------------- |-------------- |
-| 1-1. 로그인 | ip, port, userId, userNick | 성공여부, roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime) 에 대한 Map (key, value) |
-| 1-2. 로그아웃 | userId, userNick | 성공여부 |
-| 1-3. 서버연결끊김 | X | 연결 끊겼다는걸 알려주는 flag...? |
-| 2-1. 유저 조회 (룸 생성) | 룸 생성 flag | 성공여부, 모든 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
-| 2-2. 룸 생성 | userId, userNick에 대한 Map | 성공여부, roomId, roomNick, (roomCreateTime) |
-| 2-3. 룸 입장 | userId, userNick, roomId | 성공여부 |
-| 2-4. 유저 조회 (룸 초대) | userId, userNick, roomId, 룸 초대 flag | 성공여부, 모든 유저의 userId, userNick, isMember, isLogin에 대한 Map (key, value) |
-| 2-5. 룸 초대 | roomId와 userId, userNick에 대한 Map | 성공여부 |
-| 2-6. 유저 조회 (추방) (관리자만) |  userId, userNick, roomId, 룸 추방 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
-| 2-7. 추방 (관리자만) | roomId와 userId, userNick에 대한 Map | 성공여부 |
-| 2-8. 룸 탈퇴 | roomId, userId, userNick | 성공여부, (룸 관리자의 경우 성공여부 false와 함께 탈퇴 불가 flag) |
-| 2-9. 유저 조회 (탈퇴) (관리자만) | userId, userNick, roomId, 룸 탈퇴 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map |
-| 2-10. 관리자 권한 양도 (관리자만) | roomId, 본인과 양도할 userId, userNick | 성공여부 (룸 탈퇴 진행) |
