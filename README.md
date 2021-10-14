@@ -217,24 +217,24 @@ Git Flow 정책 기반
         &emsp;&emsp; - roomId, roomNick, ownerUserId, (roomCreateTime)에 대한 Map<br>
         &emsp; - roomId를 통해 해당 룸에 누가 입장했는지 broadcast<br>
         &emsp; - 이 때, Socket 하위 클래스에서 들고있는 userNick을 이용하여 누가 입장했는지 알려주면 됨<br><br>
-        * 2.4. 유저 조회 (룸 초대)<br>
+        * 2-4. 유저 조회 (룸 초대)<br>
         &emsp; - roomId를 통해 모든 유저에 대한 정보 response<br>
         &emsp;&emsp; - userId, userNick, isMember, isLogin에 대한 Map<br><br>
-        * 2.5 룸 초대<br>
+        * 2-5. 룸 초대<br>
         &emsp; - 클라이언트로부터 받은 roomId와 유저 목록을 통해 룸에 유저 초대 후 성공여부 response<br>
         &emsp; - roomId를 통해 해당 룸에 누가 초대됐는지 broadcast<br><br>
-        * 2.6 유저 조회 (추방) (관리자만) <br>
+        * 2-6. 유저 조회 (추방) (관리자만) <br>
         &emsp; - roomId를 통해 룸 내 유저에 대한 정보 response<br>
         &emsp;&emsp; - userId, userNick, isLogin에 대한 Map<br><br>
-        * 2.7 추방 (관리자만) <br>
+        * 2-7. 추방 (관리자만) <br>
         &emsp; - roomId와 추방할 유저의 userId를 통해 유저 추방 후 성공여부 response<br>
         &emsp; - roomId를 통해 해당 룸에서 누가 추방됐는지 broadcast<br><br>
-        * 2.8 룸 탈퇴 <br>
+        * 2-8. 룸 탈퇴 <br>
         &emsp; - roomId로 roomMap에서 관리자인지 아닌지 파악<br>
         &emsp; - 관리자가 아닌 경우 탈퇴처리하여 성공여부 response<br>
         &emsp; - 관리자인 경우 성공여부 false 처리하고, roomId를 통해 룸 내 유저에 대한 정보 response<br>
         &emsp;&emsp; - userId, userNick, isLogin에 대한 Map<br><br>
-        * 2.9 관리자 권한 양도 (관리자만) <br>
+        * 2-9. 관리자 권한 양도 (관리자만) <br>
         &emsp; - roomId와 관리자의 userId, 양도할 userId를 통해 roomMap에서 ownerUserId 변경하고 기존 관리자 탈퇴 처리 후 성공여부 response<br><br>
       </p>
     </div>
@@ -307,25 +307,25 @@ Git Flow 정책 기반
         * 2-3.  룸 입장<br>
         &emsp; - 입장하고자 하는 룸 클릭하며 해당 roomId를 서버에 request<br>
         &emsp; - 입장 성공 시 채팅창 화면으로 이동<br><br>
-        * 2.4. 유저 조회 (룸 초대)<br>
+        * 2-4. 유저 조회 (룸 초대)<br>
         &emsp; - 해당 룸의 roomId를 서버에 request<br>
         &emsp; - response로 온 userMap을 바탕으로 유저 목록 체크박스로 그리기<br>
         &emsp;&emsp; - 이 때 룸 멤버에 대해서는 체크박스 disable처리<br><br>
-        * 2.5 룸 초대<br>
+        * 2-5. 룸 초대<br>
         &emsp; - 해당 룸의 roomId와 초대할 유저에 대한 userMap을 서버에 request<br>
         &emsp; - 룸 초대 성공 시 채팅창 화면으로 이동<br><br>
-        * 2.6 유저 조회 (추방) (관리자만) <br>
+        * 2-6. 유저 조회 (추방) (관리자만) <br>
         &emsp; - 추방 메뉴 자체는 userId == ownerUserId 인 경우에만 보이도록 함<br>
         &emsp; - 해당 룸의 roomId를 서버에 request<br>
-        &emsp; - response로 온 룸 멤버에 대한 userMap을 바탕으로 유저 목록 체크박스로 그리기<br>
-        * 2.7 추방 (관리자만) <br>
+        &emsp; - response로 온 룸 멤버에 대한 userMap을 바탕으로 유저 목록 체크박스로 그리기<br><br>
+        * 2-7. 추방 (관리자만) <br>
         &emsp; - 해당 룸의 roomId와 추방할 유저에 대한 userMap을 서버에 request<br>
         &emsp; - 추방 성공 시 채팅창 화면으로 이동<br><br>
-        * 2.8 룸 탈퇴 <br>
+        * 2-8. 룸 탈퇴 <br>
         &emsp; - 해당 룸의 roomId를 서버에 request<br>
         &emsp; - 관리자가 아닌 경우 탈퇴 성공하면 룸 목록 갱신 및 이동<br>
         &emsp; - 관리자인 경우 response로 온 룸 멤버에 대한 userMap을 바탕으로 유저 목록 체크박스로 그리기<br><br>
-        * 2.9 관리자 권한 양도 (관리자만) <br>
+        * 2-9. 관리자 권한 양도 (관리자만) <br>
         &emsp; - roomId와 양도할 userId를 서버에 request<br>
         &emsp; - 관리자 양도 및 탈퇴 성공 시 룸 목록 갱신 및 이동<br><br>
       </p>
