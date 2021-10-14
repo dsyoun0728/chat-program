@@ -208,7 +208,7 @@ Git Flow 정책 기반
             &emsp;- Client로부터 Request를 받고, 해당 룸에 "userNick:메세지" broadcast<br>
             &emsp;- Client에 처리결과(Success면 MsgId, msgCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 3-2. 파일 전송<br>
-            &emsp;- Client로부터 Request를 받고, 파일 채널 생성 후 해당 룸으로 전송<br>
+            &emsp;- Client로부터 Request를 받고, 파일 채널 생성 후(?파일 채널은 Server와 접속시 이미 만들어져있나?) 해당 룸으로 전송<br>
             &emsp;- 해당 파일에 FileId 부여<br>
             &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 MsgId 부여<br>
             &emsp;- Client에 처리결과(Success면 MsgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
@@ -261,7 +261,7 @@ Git Flow 정책 기반
         * 3-2. 파일 전송<br>
             &emsp;- '파일 전송' 선택<br>
             &emsp;- roomId + 파일 이름 작성<br>
-            &emsp;- Server에 Request -> 파일 채널을 통해 전송<br>
+            &emsp;- Server에 Request -> 파일 채널을 통해 전송(?파일 채널은 Server와 접속시 이미 만들어져있나?)<br>
     </p>
     </div>
     <div class="client-side-impl-item">
