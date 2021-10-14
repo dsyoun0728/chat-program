@@ -336,8 +336,8 @@ Git Flow 정책 기반
         * 3-1. 텍스트 메세지 전송<br>
             &emsp;- '텍스트 메세지 전송' 선택<br>
             &emsp;- roomId + text내용 작성<br> 
-            &emsp;- Server에 Request<br><br>
-            &emsp;- Response로 Success code 받을시 채팅창 갱신
+            &emsp;- Server에 Request<br>
+            &emsp;- Response로 Success code 받을시 채팅창 갱신<br><br>
         * 3-2. 파일 전송<br>
             &emsp;- '파일 전송' 선택<br>
             &emsp;- roomId + 파일 이름 + 작성<br>
