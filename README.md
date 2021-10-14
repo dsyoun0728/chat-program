@@ -162,27 +162,26 @@ Git Flow 정책 기반
 </details>
 
 ## Request/Response Table
-| 기능 | Request | Response |
+| 기능 | Client(Request) | Server(Response) |
 | ------ | ------------- |-------------- |
-| 1-1. 로그인 | ip, port, userId, userNick | 성공여부, roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime) 에 대한 Map (key, value) |
-| 1-2. 로그아웃 | X | 성공여부 |
-| 1-3. 서버연결끊김 | X | 연결 끊겼다는걸 알려주는 flag...? |
-| 2-1. 유저 조회 (룸 생성) | 룸 생성 flag | 성공여부, 모든 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
-| 2-2. 룸 생성 | 룸 생성할 userId, userNick에 대한 Map | 성공여부, roomId, roomNick, (roomCreateTime) |
-| 2-3. 룸 입장 | roomId | 성공여부 |
-| 2-4. 유저 조회 (룸 초대) | roomId, 룸 초대 flag | 성공여부, 모든 유저의 userId, userNick, isMember, isLogin에 대한 Map (key, value) |
-| 2-5. 룸 초대 | roomId와 초대할 userId, userNick에 대한 Map | 성공여부 |
-| 2-6. 유저 조회 (추방) (관리자만) |  roomId, 룸 추방 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
-| 2-7. 추방 (관리자만) | roomId와 추방할 userId, userNick에 대한 Map | 성공여부 |
-| 2-8. 룸 탈퇴 | roomId | 성공여부, (룸 관리자의 경우 성공여부 false와 함께 탈퇴 불가 flag) |
-| 2-9. 유저 조회 (탈퇴) (관리자만) | roomId, 룸 탈퇴 flag | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map |
-| 2-10. 관리자 권한 양도 (관리자만) | roomId, 본인과 양도할 userId, userNick | 성공여부 (룸 탈퇴 진행) |
-| 3-1. 텍스트 메세지 전송 | roomId, text(이건 어떻게...?) | 성공여부, msgId, msgCreateTime |
-| 3-2. 파일 전송 | roomId, file(fileName, fileExt 등 / 이건 어떻게...?)  | 성공여부, msgId, fileId, fileCreateTime에 대한 Map |
-| 4-1. 텍스트 메세지 삭제 | roomId, msgId | 성공여부 |
-| 4-2. 파일 목록 조회 | roomId | 성공여부, fileId, fileNum, fileName, fileExt, fileSize, fileCreateTime에 대한 Map |
-| 4-3. 파일 다운로드 | fileId 리스트 | 성공여부 | 
-| 4-4. 파일 삭제 | fileId 리스트 | 성공여부 |
+| 1-1. 로그인 | serviceNum, ip, port, userId, userNick | 성공여부, roomId, roomNick, (roomCreateTime, lastMsg, lastMsgTime) 에 대한 Map (key, value) |
+| 1-2. 로그아웃 | serviceNum | 성공여부 |
+| 1-3. 서버연결끊김 | serviceNum | 연결 끊겼다는걸 알려주는 flag...? |
+| 2-1. 유저 조회 (룸 생성) | serviceNum | 성공여부, 모든 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-2. 룸 생성 | serviceNum, 룸 생성할 userId, userNick에 대한 Map | 성공여부, roomId, roomNick, ownerUserId, (roomCreateTime)에 대한 Map |
+| 2-3. 룸 입장 | serviceNum, roomId | 성공여부 |
+| 2-4. 유저 조회 (룸 초대) | serviceNum, roomId | 성공여부, 모든 유저의 userId, userNick, isMember, isLogin에 대한 Map (key, value) |
+| 2-5. 룸 초대 | serviceNum, roomId와 초대할 userId, userNick에 대한 Map | 성공여부 |
+| 2-6. 유저 조회 (추방) (관리자만) | serviceNum, roomId | 성공여부, 룸 내 유저의 userId, userNick, isLogin에 대한 Map (key, value) |
+| 2-7. 추방 (관리자만) | serviceNum, roomId와 추방할 userId, userNick에 대한 Map | 성공여부 |
+| 2-8. 룸 탈퇴 | serviceNum, roomId | 성공여부, (룸 관리자의 경우 성공여부 false와 함께 룸 내 유저의 userId, userNick, isLogin에 대한 Map) |
+| 2-9. 관리자 권한 양도 (관리자만) | serviceNum, roomId, 양도할 userId | 성공여부 (룸 탈퇴 진행) |
+| 3-1. 텍스트 메세지 전송 | serviceNum, roomId, text(이건 어떻게...?) | 성공여부, msgId, msgCreateTime |
+| 3-2. 파일 전송 | serviceNum, roomId, file(fileName, fileExt 등 / 이건 어떻게...?)  | 성공여부, msgId, fileId, fileCreateTime에 대한 Map |
+| 4-1. 텍스트 메세지 삭제 | serviceNum, roomId, msgId | 성공여부 |
+| 4-2. 파일 목록 조회 | serviceNum, roomId | 성공여부, fileId, fileNum, fileName, fileExt, fileSize, fileCreateTime에 대한 Map |
+| 4-3. 파일 다운로드 | serviceNum, fileId 리스트 | 성공여부 |
+| 4-4. 파일 삭제 | serviceNum, fileId 리스트 | 성공여부 |
 
 ## Server side implementation
 <details>
