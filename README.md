@@ -243,10 +243,10 @@ Git Flow 정책 기반
       <p class="server-side-impl-detail"> 
         * 3-1. 텍스트 메세지 전송<br>
         &emsp;- Client로부터 Request를 받고, 해당 룸에 "userNick:메세지" broadcast<br>
-        &emsp;- Client에 처리결과(Success면 MsgId, msgCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
+        &emsp;- Client에 처리결과(Success면 msgId, msgCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br><br>
         * 3-2. 파일 전송<br>
         &emsp;- Client로부터 Request를 받고, 파일 채널 생성 후(?파일 채널은 Server와 접속시 이미 만들어져있나?) 해당 룸으로 전송<br>
-        &emsp;- 해당 파일에 FileId 부여<br>
+        &emsp;- 해당 파일에 fileId 부여<br>
         &emsp;- 해당 룸에 '파일명.확장자' 텍스트로 broadcast -> 해당 텍스트에 MsgId 부여<br>
         &emsp;- Client에 처리결과(Success면 MsgId, fileCreateTime 부여 후 성공 코드 / Fail이면 에러 코드) Response<br>
       </p>
@@ -337,10 +337,12 @@ Git Flow 정책 기반
             &emsp;- '텍스트 메세지 전송' 선택<br>
             &emsp;- roomId + text내용 작성<br> 
             &emsp;- Server에 Request<br><br>
+            &emsp;- Response로 Success code 받을시 채팅창 갱신
         * 3-2. 파일 전송<br>
             &emsp;- '파일 전송' 선택<br>
             &emsp;- roomId + 파일 이름 + 작성<br>
             &emsp;- Server에 Request -> 파일 채널을 통해 전송(?파일 채널은 Server와 접속시 이미 만들어져있나?)<br>
+            &emsp;- Response로 Success code 받을시 클라이언트 화면에 '파일 전송 성공' 출력
     </p>
     </div>
     <div class="client-side-impl-item">
@@ -350,18 +352,22 @@ Git Flow 정책 기반
             &emsp;- '텍스트 메세지 삭제' 선택<br>
             &emsp;- MsgId 작성<br>
             &emsp;- Server에 Request<br><br>
+            &emsp;- Response로 Success code 받을시 클라이언트 화면에 '메세지 삭제 완료' 출력
         * 4-2. 파일 목록 조회<br>
             &emsp;- '파일 목록 조회' 선택<br>
-            &emsp;- rooId 작성<br>
+            &emsp;- roomId 작성<br>
             &emsp;- Server에 Request<br><br>
+            &emsp;- Response로 Success code 받을시 Map을 바탕으로 목록 출력
         * 4-3. 파일 다운로드<br>
             &emsp;- '파일 다운로드' 선택<br>
             &emsp;- rooId + 파일 이름 작성<br>
             &emsp;- Server에 Request -> 파일 채널을 통해 다운로드<br><br>
+            &emsp;- Response로 Success code 받을시 클라이언트 화면에 '파일 다운로드 완료' 출력
         * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
             &emsp;- '파일 삭제' 선택<br>
             &emsp;- rooId + 파일 이름 작성<br>
             &emsp;- Server에 Request
+            &emsp;- Response로 Success code 받을시 클라이언트 화면에 '파일 삭제 완료' 출력
     </p>
     </div>
   </div>
