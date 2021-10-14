@@ -277,11 +277,11 @@ Git Flow 정책 기반
             &emsp;- Server에 Request<br><br>
         * 4-3. 파일 다운로드<br>
             &emsp;- '파일 다운로드' 선택<br>
-            &emsp;- rooId + fileId 작성<br>
+            &emsp;- rooId + 파일 이름 작성<br>
             &emsp;- Server에 Request -> 파일 채널을 통해 다운로드<br><br>
         * 4-4. 파일 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
             &emsp;- '파일 삭제' 선택<br>
-            &emsp;- rooId + fileId 작성<br>
+            &emsp;- rooId +  작성<br>
             &emsp;- Server에 Request
     </p>
     </div>
