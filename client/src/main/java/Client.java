@@ -25,19 +25,10 @@ public class Client {
             if (socketChannel.isOpen()) { stopClient(); }
             return;
         }
-
-        Runnable readRunnable = () -> receive();
-        executorService.submit(readRunnable);
-
         /*
         * client가 끊기지 않도록 계속 구동하는 부분
         * while(true) {  }
         * */
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     void stopClient() {
@@ -51,7 +42,10 @@ public class Client {
     }
 
     void receive() {
-        System.out.println("receive");
+        Runnable readRunnable = () -> {
+            System.out.println("receive");
+        };
+        executorService.submit(readRunnable);
     }
 
     void send(ByteBuffer byteBufferData) {
@@ -75,6 +69,6 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
         client.startClient();
-//        client.send(Charset.forName("UTF-8").encode("hello"));
+        client.send(Charset.forName("UTF-8").encode("hello"));
     }
 }
