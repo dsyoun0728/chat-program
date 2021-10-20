@@ -18,6 +18,7 @@ public class Server {
     Selector selector;
     ServerSocketChannel serverSocketChannel;
     List<Client> connections = new Vector<Client>();
+    Charset charset = Charset.forName("UTF-8");
 
     void startServer() {
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -54,11 +55,16 @@ public class Server {
                         accept(selectionKey);
                     } else if (selectionKey.isReadable()) {
                         Client client = (Client)selectionKey.attachment();
+                        selectionKey.interestOps(0);
                         client.receive(selectionKey);
-                    } else if (selectionKey.isWritable()) {
+                    }
+                    /*
+                    selector에서 OP_WRITE는 사용하지 않을 예정
+                    else if (selectionKey.isWritable()) {
                         Client client = (Client)selectionKey.attachment();
                         client.send(selectionKey);
                     }
+                    */
                     iterator.remove();
                 }
             } catch (IOException e) {
@@ -137,26 +143,26 @@ public class Server {
         void receive(SelectionKey selectionKey) {
             Runnable readRunnable = () -> {
                 try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(100);
-
-                    int byteCount = socketChannel.read(byteBuffer);
-
+                    ByteBuffer readByteBuffer = ByteBuffer.allocate(100);
+                    int byteCount = socketChannel.read(readByteBuffer);
                     if (byteCount == -1) {
                         throw new IOException("클라이언트 연결 정상적으로 끊김" + socketChannel.getRemoteAddress());
                     }
+                    readByteBuffer.flip();
+//                    // wirteByteBuffer는 readByteBuffer를 가공해야함
+//                    ByteBuffer writeByteBuffer = readByteBuffer;
 
-                    byteBuffer.flip();
-                    Charset charset = Charset.forName("UTF-8");
-                    String data = charset.decode(byteBuffer).toString();
-
+                    // data 확인용
+                    String data = charset.decode(readByteBuffer).toString();
                     String message = "[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]";
                     System.out.println(message + " " + data);
 
-                    for (Client client : connections) {
-                        client.sendData = data;
-                        SelectionKey key = client.socketChannel.keyFor(selector);
-                        key.interestOps(SelectionKey.OP_WRITE);
-                    }
+//                    // 채팅방에 broadcast
+//                    for (Client client : connections) {
+//                        client.send(writeByteBuffer);
+//                    }
+
+                    selectionKey.interestOps(SelectionKey.OP_READ);
                     selector.wakeup();
                 } catch (IOException e) {
                     System.out.println("server receive IOException\n\n\n");
@@ -175,14 +181,11 @@ public class Server {
             executorService.submit(readRunnable);
         }
 
-        void send(SelectionKey selectionKey) {
+        void send(ByteBuffer writeByteBuffer) {
+            // send에는 packet을 이미 capsule화해서 매개값으로 넣을 것
             Runnable writeRunnable = () -> {
                 try {
-                    Charset charset = Charset.forName("UTF-8");
-                    ByteBuffer byteBuffer = charset.encode(sendData);
-                    socketChannel.write(byteBuffer);
-                    selectionKey.interestOps(SelectionKey.OP_READ);
-                    selector.wakeup();
+                    socketChannel.write(writeByteBuffer);
                 } catch (IOException e) {
                     System.out.println("server send IOException\n\n\n");
                     e.printStackTrace();
