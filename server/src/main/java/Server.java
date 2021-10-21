@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-
     ExecutorService executorService;
     ServerSocketChannel serverSocketChannel;
     Selector selector;
@@ -55,7 +54,7 @@ public class Server {
 
                 // 발생한 이벤트들을 담은 Iterator의 이벤트를 하나씩 순서대로 처리함
                 while (iterator.hasNext()) {
-                    // 현재 순서의 처리할 이벤트를 임시 저장하고 Iterator에서 지워줌
+                    // 현재 순서의 처리할 이벤트를 SelectionKey에 임시 저장하고 Iterator에서 지워줌
                     SelectionKey selectionKey = iterator.next();
                     iterator.remove();
 
@@ -64,16 +63,14 @@ public class Server {
                         accept(selectionKey);
                         // 읽기 이벤트(클라이언트 -> 서버)가 발생한 경우
                     } else if (selectionKey.isReadable()) {
-                        selectionKey.interestOps(0);
-                        selector.wakeup();
-                        Client client = (Client) selectionKey.attachment();         // 클라이언트 객체 얻기
+                        Client client = (Client) selectionKey.attachment();         // 현재 클라이언트 객체 얻기
                         client.receive(selectionKey);
+                        selectionKey.interestOps(0);
                         // 쓰기 이벤트(서버 -> 클라이언트)가 발생한 경우
                     } else if (selectionKey.isWritable()){
-                        selectionKey.interestOps(0);
-                        selector.wakeup();
                         Client client = (Client) selectionKey.attachment();
                         client.send(selectionKey);
+                        selectionKey.interestOps(0);
                     }
                 }
             } catch (IOException e) {
@@ -129,6 +126,9 @@ public class Server {
             // 연결된 클라이언트를 컬렉션에 추가
             Client client = new Client(socketChannel);
             connections.add(client);
+
+            // ID를 입력받기 위한 출력을 해당 클라이언트에 해줌
+            socketChannel.write(ByteBuffer.wrap("ID를 입력해주세요 : ".getBytes()));
         } catch (IOException e) {
             System.out.println("IOException");
             e.printStackTrace();
@@ -144,6 +144,8 @@ public class Server {
     // 실제 Client가 아닌 Server입장에서의 Client
     class Client {
         SocketChannel socketChannel;                                                                // 여기서의 SocketChannel은 서버쪽의 것
+        String id;
+        boolean idRegist = false;                                                                   // ID 등록 여부
         String sendData;                                                                            // 클라이언트로 보낼 데이터를 저장하는 필드
 
         Client(SocketChannel socketChannel) throws IOException {
@@ -171,15 +173,48 @@ public class Server {
 
                         System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
 
+                        // 현재 ID가 없으면 ID등록
+
+                        Client client = (Client) selectionKey.attachment();                                 // 현재 클라이언트 객체 얻기
+                        if(!client.idRegist){
+                            client.idRegist = true;
+                            byteBuffer.flip();
+                            Charset charset = Charset.forName("UTF-8");
+                            client.id = charset.decode(byteBuffer).toString();
+                            byteBuffer.clear();
+
+                            // 서버에 출력
+                            System.out.println(client.id+"님이 입장하셨습니다");
+
+                            // 다른 Client들에게 출력
+                            for (Client c : connections) {
+                                if (!c.equals(client)) {
+                                    c.sendData = client.id +"님이 입장하셨습니다";
+                                    SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
+                                    key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
+                                } else {
+                                    SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
+                                    key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
+                                }
+                            }
+                            selector.wakeup();
+                            return;
+                        }
+
                         byteBuffer.flip();                                                                  // 데이터가 저장된 ByteBuffer의 flip() 메소드 호출해 위치 속성값 변경
                         Charset charset = Charset.forName("UTF-8");                                         // Charset 방식 UTF-8으로 설정
                         String data = charset.decode(byteBuffer).toString();                                // UTF-8로 디코딩한 문자열 얻기
 
-                        // 모든 클라이언트에게 문자열을 전송하는 코드
-                        for (Client client : connections) {
-                            client.sendData = data;
-                            SelectionKey key = client.socketChannel.keyFor(selector);                       // Client의 통신 채널로부터 SelectionKey 얻기
-                            key.interestOps(SelectionKey.OP_WRITE);                                         // 채널의 작업 유형을 쓰기 작업 유형으로 변경
+                        // 자신을 제외한 모든 클라이언트에게 문자열을 전송하는 코드
+                        for (Client c : connections) {
+                            if (!c.equals(client)) {
+                                c.sendData = client.id +"> "+data;
+                                SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
+                                key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
+                            } else {
+                                SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
+                                key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
+                            }
                         }
                         // 변경된 작업 유형을 감지하도록 하기 위해 Selector의 select() 블로킹 해제하고 다시 실행하도록 함
                         selector.wakeup();
@@ -189,6 +224,7 @@ public class Server {
                             System.out.println("[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
                             socketChannel.close();                                                          // SocketChannel 닫기
                         } catch (IOException e2) {
+                            e2.printStackTrace();
                         }
                     }
                 }

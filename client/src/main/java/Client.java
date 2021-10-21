@@ -18,6 +18,7 @@ public class Client {
             socketChannel.configureBlocking(true);
             socketChannel.connect(new InetSocketAddress(5001));
             System.out.println("연결 완료");
+
         } catch (IOException e) {
             System.out.println("startClient try-catch block IOException\n\n\n" + e + "\n\n\n");
             if (socketChannel.isOpen()) { stopClient(); }
@@ -44,7 +45,7 @@ public class Client {
         Runnable readRunnable = () -> {
             while (true) {
                 try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(100);
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
 
                     int readByteCount = socketChannel.read(byteBuffer);
 
@@ -89,10 +90,10 @@ public class Client {
         client.startClient();
 
         String chat;
+        Scanner sc = new Scanner(System.in);
 
         while(true) {
-            Scanner sc = new Scanner(System.in);
-            chat = sc.next();
+            chat = sc.nextLine();
             client.send(chat);
         }
     }
