@@ -144,8 +144,8 @@ public class Server {
     // 실제 Client가 아닌 Server입장에서의 Client
     class Client {
         SocketChannel socketChannel;                                                                // 여기서의 SocketChannel은 서버쪽의 것
-        String id;
-        boolean idRegist = false;                                                                   // ID 등록 여부
+        String userNick;
+        boolean userNickRegist = false;                                                                   // ID 등록 여부
         String sendData;                                                                            // 클라이언트로 보낼 데이터를 저장하는 필드
 
         Client(SocketChannel socketChannel) throws IOException {
@@ -155,7 +155,7 @@ public class Server {
             selectionKey.attach(this);                                                           // SelectionKey에 자기 자신을 첨부 객체로 저장
         }
 
-        // 클라이언트 -> 서버로 메시지 보냈을 때(서버 - 읽기 이벤트 -> 클라이언트들에게 전송)
+        // 클라이언트 -> 서버로 메시지 보냈을 때(서버 OP_READ -> 클라이언트들에게 전송)
         void receive(SelectionKey selectionKey) {
             Runnable task = new Runnable() {
                 @Override
