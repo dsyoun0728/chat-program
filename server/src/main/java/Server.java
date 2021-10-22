@@ -1,3 +1,5 @@
+import packet.ResponsePacket;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -6,6 +8,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -208,5 +211,13 @@ public class Server {
     public static void main(String[] args) {
         Server server = new Server();
         server.startServer();
+//        // response packet 제작 예시
+//        ResponsePacket responsePacket = new ResponsePacket(
+//                (byte) 20,
+//                (byte) 16,
+//                true,
+//                "200".getBytes(StandardCharsets.UTF_8),
+//                "nonono".getBytes(StandardCharsets.UTF_8)
+//        );
     }
 }
