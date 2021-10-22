@@ -128,7 +128,7 @@ public class Server {
             connections.add(client);
 
             // ID를 입력받기 위한 출력을 해당 클라이언트에 해줌
-            socketChannel.write(ByteBuffer.wrap("ID를 입력해주세요 : ".getBytes()));
+            socketChannel.write(ByteBuffer.wrap("NickName을 입력해주세요 : ".getBytes()));
         } catch (IOException e) {
             System.out.println("IOException");
             e.printStackTrace();
@@ -145,14 +145,14 @@ public class Server {
     class Client {
         SocketChannel socketChannel;                                                                // 여기서의 SocketChannel은 서버쪽의 것
         String userNick;
-        boolean userNickRegist = false;                                                                   // ID 등록 여부
+        boolean userNickRegist = false;                                                             // ID 등록 여부
         String sendData;                                                                            // 클라이언트로 보낼 데이터를 저장하는 필드
 
         Client(SocketChannel socketChannel) throws IOException {
             this.socketChannel = socketChannel;                                                     // 매개값으로 socketChannel 필드 초기화
-            socketChannel.configureBlocking(false);                                              // 넌블로킹으로 설정
+            socketChannel.configureBlocking(false);                                                 // 넌블로킹으로 설정
             SelectionKey selectionKey = socketChannel.register(selector, SelectionKey.OP_READ);     // 읽기 작업 유형으로 Selector에 등록
-            selectionKey.attach(this);                                                           // SelectionKey에 자기 자신을 첨부 객체로 저장
+            selectionKey.attach(this);                                                              // SelectionKey에 자기 자신을 첨부 객체로 저장
         }
 
         // 클라이언트 -> 서버로 메시지 보냈을 때(서버 OP_READ -> 클라이언트들에게 전송)
@@ -174,22 +174,21 @@ public class Server {
                         System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
 
                         // 현재 ID가 없으면 ID등록
-
                         Client client = (Client) selectionKey.attachment();                                 // 현재 클라이언트 객체 얻기
-                        if(!client.idRegist){
-                            client.idRegist = true;
+                        if(!client.userNickRegist){
+                            client.userNickRegist = true;
                             byteBuffer.flip();
                             Charset charset = Charset.forName("UTF-8");
-                            client.id = charset.decode(byteBuffer).toString();
+                            client.userNick = charset.decode(byteBuffer).toString();
                             byteBuffer.clear();
 
                             // 서버에 출력
-                            System.out.println(client.id+"님이 입장하셨습니다");
+                            System.out.println(client.userNick+"님이 입장하셨습니다");
 
                             // 다른 Client들에게 출력
                             for (Client c : connections) {
                                 if (!c.equals(client)) {
-                                    c.sendData = client.id +"님이 입장하셨습니다";
+                                    c.sendData = client.userNick +"님이 입장하셨습니다";
                                     SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                                     key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
                                 } else {
@@ -208,7 +207,7 @@ public class Server {
                         // 자신을 제외한 모든 클라이언트에게 문자열을 전송하는 코드
                         for (Client c : connections) {
                             if (!c.equals(client)) {
-                                c.sendData = client.id +"> "+data;
+                                c.sendData = client.userNick +"> "+data;
                                 SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                                 key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
                             } else {
@@ -232,7 +231,7 @@ public class Server {
             executorService.submit(task);
         }
 
-
+        //서버 -> 클라이언트
         void send(SelectionKey selectionKey) {
             Runnable task = new Runnable() {
                 @Override
