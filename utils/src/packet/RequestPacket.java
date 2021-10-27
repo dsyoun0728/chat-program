@@ -5,7 +5,7 @@ import util.Function;
 
 public class RequestPacket extends ProtocolPacket {
     byte functionNum;
-    byte[] requestPacketByteArray = new byte[120];
+    public byte[] requestPacketByteArray = new byte[120];
 
     public RequestPacket(String functionName, boolean isLast,  byte[] contents, byte[] optionalInfo) {
         super(isLast, contents, optionalInfo);

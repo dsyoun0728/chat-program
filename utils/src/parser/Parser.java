@@ -4,9 +4,9 @@ import util.UniqueID;
 public class Parser {
     String uniqueID;
     int lastFlag;
-    int contentsLength;
-    String contents;
-    String optionalInfo;
+    public int contentsLength;
+    public String contents;
+    public String optionalInfo;
 
     public Parser(byte[] uniqueIDByteArray, byte lastAndLength, byte[] contents, byte[] optionalInfo) {
         this.uniqueID = UniqueID.getFullUniqueID(uniqueIDByteArray);

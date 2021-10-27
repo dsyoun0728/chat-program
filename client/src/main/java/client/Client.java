@@ -1,10 +1,12 @@
+package main.java.client;
+
 import packet.RequestPacket;
+import parser.ResponseParser;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +21,9 @@ public class Client {
             executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
-            socketChannel.connect(new InetSocketAddress("192.168.14.59", 5001));
+            socketChannel.connect(new InetSocketAddress(5001));
+            System.out.println("연결 완료");
+
         } catch (IOException e) {
             System.out.println("startClient try-catch block IOException\n\n\n" + e + "\n\n\n");
             if (socketChannel.isOpen()) { stopClient(); }
@@ -29,10 +33,7 @@ public class Client {
             if (socketChannel.isOpen()) { stopClient(); }
             return;
         }
-        /*
-        * client가 끊기지 않도록 계속 구동하는 부분
-        * while(true) {  }
-        * */
+        receive();
     }
 
     void stopClient() {
@@ -47,18 +48,53 @@ public class Client {
 
     void receive() {
         Runnable readRunnable = () -> {
-            System.out.println("receive");
+            while (true) {
+                try {
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(200);
+
+                    int readByteCount = socketChannel.read(byteBuffer);
+
+                    if (readByteCount == -1) {
+                        throw new IOException();
+                    }
+
+                    /*byteBuffer.flip();
+                    Charset charset = Charset.forName("UTF-8");
+                    String data = charset.decode(byteBuffer).toString();*/
+
+                    byteBuffer.flip();
+                    byte[] responsePacketByteArray = byteBuffer.array();
+                    ResponseParser responseParser = new ResponseParser(responsePacketByteArray);
+
+                    // Contents 분리
+                    byte[] originalContents = responseParser.contents.getBytes();
+                    byte[] contents = new byte[responseParser.contentsLength];
+                    System.arraycopy(originalContents,0,contents,0,contents.length);
+
+                    // Optional Info 분리
+                    byte[] originalOpInfo = responseParser.optionalInfo.getBytes();
+                    byte[] OpInfo = new byte[9];    // 임시 값
+                    System.arraycopy(originalOpInfo,0,OpInfo,0,OpInfo.length);
+
+                    String msg = new String(contents,StandardCharsets.UTF_8);
+                    String id = new String(OpInfo,StandardCharsets.UTF_8);
+
+                    System.out.println(id + "> "+ msg);
+                } catch (Exception e) {
+                    System.out.println("서버 통신 안됨");
+                    stopClient();
+                    break;
+                }
+            }
         };
         executorService.submit(readRunnable);
     }
 
-    void send(ByteBuffer byteBufferData) {
-        Runnable writeRunnable = () -> {
-            try {
-//                    Charset charset = Charset.forName("UTF-8");
-//                    ByteBuffer byteBuffer = charset.encode(data);
-//                    socketChannel.write(byteBuffer);
-                socketChannel.write(byteBufferData);
+    private void send(byte[] requestPacketByteArray) {
+        Runnable writeProtocolRunnable = () -> {
+            try{
+                ByteBuffer byteBuffer = ByteBuffer.wrap(requestPacketByteArray);
+                socketChannel.write(byteBuffer);
             } catch(IOException e) {
                 System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
                 stopClient();
@@ -67,13 +103,36 @@ public class Client {
                 stopClient();
             }
         };
-        executorService.submit(writeRunnable);
+        executorService.submit(writeProtocolRunnable);
     }
 
     public static void main(String[] args) {
         Client client = new Client();
         client.startClient();
-        client.send(Charset.forName("UTF-8").encode("hello"));
+
+        // ID 입력하기
+        String userNick;
+        Scanner sc = new Scanner(System.in);
+        userNick = sc.nextLine();
+        RequestPacket rp = new RequestPacket(
+                "SendText",
+                true,
+                userNick.getBytes(StandardCharsets.UTF_8),
+                userNick.getBytes(StandardCharsets.UTF_8)
+        );
+        client.send(rp.requestPacketByteArray);
+
+        String contentsStr;
+        while(true) {
+            contentsStr = sc.nextLine();
+            RequestPacket requestPacket = new RequestPacket(
+                    "SendText",
+                    true,
+                    contentsStr.getBytes(StandardCharsets.UTF_8),
+                    userNick.getBytes(StandardCharsets.UTF_8)
+            );
+            client.send(requestPacket.requestPacketByteArray);
+        }
 
 //        // request packet 제작 예시
 //        Scanner scanner = new Scanner(System.in);//
@@ -86,4 +145,6 @@ public class Client {
 //                userNick.getBytes(StandardCharsets.UTF_8)
 //        );
     }
+
+
 }

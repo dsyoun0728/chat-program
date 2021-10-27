@@ -3,7 +3,7 @@ package packet;
 public class ResponsePacket extends ProtocolPacket {
     byte responseCode;
     byte functionNum;
-    byte[] responsePacketByteArray = new byte[120];
+    public byte[] responsePacketByteArray = new byte[120];
 
     public ResponsePacket(byte responseCode, byte functionNum, boolean isLast, byte[] contents, byte[] optionalInfo) {
         super(isLast, contents, optionalInfo);

@@ -12,6 +12,7 @@
     <modules>
         <module>client</module>
         <module>server</module>
+        <module>utils</module>
     </modules>
 
     <build>
