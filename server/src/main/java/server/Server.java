@@ -138,8 +138,8 @@ public class Server {
                     (byte) 20,
                     (byte) 4,
                     true,
-                    "ID를 입력해주세요 : ".getBytes(StandardCharsets.UTF_8),
-                    "ID 입력".getBytes(StandardCharsets.UTF_8)
+                    "Server> ID를 입력해주세요 : ".getBytes(StandardCharsets.UTF_8),
+                    "".getBytes(StandardCharsets.UTF_8)
             );
             socketChannel.write(ByteBuffer.wrap(responsePacket.responsePacketByteArray));
         } catch (IOException e) {
@@ -194,9 +194,9 @@ public class Server {
                             // ID 뽑기
                             byte[] requestPacketByteArray = byteBuffer.array();
                             RequestParser requestParser = new RequestParser(requestPacketByteArray);
-                            byte[] originalMessage = requestParser.contents.getBytes();
+                            byte[] originalContents = requestParser.contents;
                             byte[] id = new byte[requestParser.contentsLength];
-                            System.arraycopy(originalMessage,0,id,0,id.length);
+                            System.arraycopy(originalContents,0,id,0,id.length);
                             client.userNick = new String(id,StandardCharsets.UTF_8);
                             byteBuffer.clear();
 
@@ -210,7 +210,7 @@ public class Server {
                                             (byte) 20,
                                             (byte) 4,
                                             true,
-                                            (client.userNick +"님이 입장하셨습니다").getBytes(StandardCharsets.UTF_8),
+                                            ("Server> "+client.userNick +"님이 입장하셨습니다").getBytes(StandardCharsets.UTF_8),
                                             "".getBytes(StandardCharsets.UTF_8)
                                     );
                                     c.responsePacketByteArray = responsePacket.responsePacketByteArray;
@@ -229,10 +229,12 @@ public class Server {
                         byteBuffer.flip();
                         byte[] requestPacketByteArray = byteBuffer.array();
                         RequestParser requestParser = new RequestParser(requestPacketByteArray);
-                        byte[] originalMessage = requestParser.contents.getBytes();
-
+                        byte[] originalMessage = requestParser.contents;
                         byte[] message = new byte[requestParser.contentsLength];
                         System.arraycopy(originalMessage,0,message,0,message.length);
+
+                        String msg = new String(message,StandardCharsets.UTF_8);
+                        String userNickNotice = client.userNick+"> ";
 
                         // 자신을 제외한 모든 클라이언트에게 문자열을 전송하는 코드
                         for (Client c : connections) {
@@ -241,8 +243,8 @@ public class Server {
                                         (byte) 20,
                                         (byte) 4,
                                         true,
-                                        message,
-                                        client.userNick.getBytes(StandardCharsets.UTF_8)
+                                        (userNickNotice+msg).getBytes(StandardCharsets.UTF_8),
+                                        "".getBytes(StandardCharsets.UTF_8)
                                 );
                                 c.responsePacketByteArray = responsePacket.responsePacketByteArray;
                                 SelectionKey key = c.socketChannel.keyFor(selector);

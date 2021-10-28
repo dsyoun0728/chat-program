@@ -58,28 +58,23 @@ public class Client {
                         throw new IOException();
                     }
 
-                    /*byteBuffer.flip();
-                    Charset charset = Charset.forName("UTF-8");
-                    String data = charset.decode(byteBuffer).toString();*/
-
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
                     ResponseParser responseParser = new ResponseParser(responsePacketByteArray);
 
                     // Contents 분리
-                    byte[] originalContents = responseParser.contents.getBytes();
+                    byte[] originalContents = responseParser.contents;
                     byte[] contents = new byte[responseParser.contentsLength];
                     System.arraycopy(originalContents,0,contents,0,contents.length);
+                    String msg = new String(contents,StandardCharsets.UTF_8);
 
-                    // Optional Info 분리
-                    byte[] originalOpInfo = responseParser.optionalInfo.getBytes();
+                    /*// Optional Info 분리
+                    byte[] originalOpInfo = responseParser.optionalInfo;
                     byte[] OpInfo = new byte[9];    // 임시 값
                     System.arraycopy(originalOpInfo,0,OpInfo,0,OpInfo.length);
+                    String id = new String(OpInfo,StandardCharsets.UTF_8);*/
 
-                    String msg = new String(contents,StandardCharsets.UTF_8);
-                    String id = new String(OpInfo,StandardCharsets.UTF_8);
-
-                    System.out.println(id + "> "+ msg);
+                    System.out.println(msg);
                 } catch (Exception e) {
                     System.out.println("서버 통신 안됨");
                     stopClient();

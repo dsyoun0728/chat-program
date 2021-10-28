@@ -5,15 +5,15 @@ public class Parser {
     String uniqueID;
     int lastFlag;
     public int contentsLength;
-    public String contents;
-    public String optionalInfo;
+    public byte[] contents;
+    public byte[] optionalInfo;
 
     public Parser(byte[] uniqueIDByteArray, byte lastAndLength, byte[] contents, byte[] optionalInfo) {
         this.uniqueID = UniqueID.getFullUniqueID(uniqueIDByteArray);
         this.lastFlag = lastAndLength >> 7 == -1 ? 1 : 0;
         this.contentsLength = lastAndLength & 127;
-        this.contents = new String(contents);
-        this.optionalInfo = new String(optionalInfo);
+        this.contents = contents;
+        this.optionalInfo = optionalInfo;
     }
 
     public static byte[] sliceByteArray(byte[] byteArr, int offset, int length) {
