@@ -1,4 +1,4 @@
-package main.java.client;
+package client;
 
 import packet.RequestPacket;
 import parser.ResponseParser;
@@ -86,7 +86,7 @@ public class Client {
     }
 
     private void send(byte[] requestPacketByteArray) {
-        Runnable writeProtocolRunnable = () -> {
+        Runnable writeRunnable = () -> {
             try{
                 ByteBuffer byteBuffer = ByteBuffer.wrap(requestPacketByteArray);
                 socketChannel.write(byteBuffer);
@@ -98,7 +98,7 @@ public class Client {
                 stopClient();
             }
         };
-        executorService.submit(writeProtocolRunnable);
+        executorService.submit(writeRunnable);
     }
 
     public static void main(String[] args) {
