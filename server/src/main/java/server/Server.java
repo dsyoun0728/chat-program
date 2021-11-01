@@ -138,11 +138,12 @@ public class Server {
             ResponsePacket responsePacket = new ResponsePacket(
                     (byte) 20,
                     (byte) 4,
-                    true,
                     "Server> ID를 입력해주세요 : ".getBytes(StandardCharsets.UTF_8),
                     "".getBytes(StandardCharsets.UTF_8)
             );
-            socketChannel.write(ByteBuffer.wrap(responsePacket.responsePacketByteArray));
+            for(byte[] byteArray : responsePacket.responsePacketList) {
+                socketChannel.write(ByteBuffer.wrap(byteArray));
+            }
         } catch (IOException e) {
             System.out.println("accept IOException\n\n\n");
             e.printStackTrace();
@@ -208,11 +209,13 @@ public class Server {
                                 ResponsePacket responsePacket = new ResponsePacket(
                                         (byte) 20,
                                         (byte) 4,
-                                        true,
                                         ("Server> "+client.userNick +"님이 입장하셨습니다").getBytes(StandardCharsets.UTF_8),
                                         "".getBytes(StandardCharsets.UTF_8)
                                 );
-                                c.responsePacketByteArray = responsePacket.responsePacketByteArray;
+                                for(byte[] byteArray : responsePacket.responsePacketList) {
+                                    c.responsePacketByteArray = byteArray;
+                                }
+//                                c.responsePacketByteArray = responsePacket.responsePacketByteArray;
                                 SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                                 key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
                             } else {
