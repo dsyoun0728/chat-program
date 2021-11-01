@@ -2,24 +2,13 @@ package packet;
 
 import java.util.ArrayList;
 
-public class ResponsePacket implements ProtocolPacket {
+public class ResponsePacket extends ProtocolPacket {
     byte responseCode;
-    byte functionNum;
-    int contentsLength;
-    byte[] contents;
-    int totalPacketNum;
-    byte[] totalPacketNumByteArray;
-    byte[] optionalInfo = new byte[34];
     public ArrayList<byte[]> responsePacketList = new ArrayList<byte[]>();
 
     public ResponsePacket(byte responseCode, byte functionNum, byte[] contents, byte[] optionalInfo) {
+        super(functionNum, contents, optionalInfo);
         this.responseCode = responseCode;
-        this.functionNum = functionNum;
-        this.contentsLength = contents.length;
-        this.contents = contents;
-        this.totalPacketNum = (int) Math.ceil((double) this.contentsLength / 80);
-        this.totalPacketNumByteArray = intToByteArray(totalPacketNum);
-        this.optionalInfo = optionalInfo;
 
         makePacketList();
     }
@@ -64,14 +53,5 @@ public class ResponsePacket implements ProtocolPacket {
         for(int i = 0; i < totalPacketNum; i ++) {
             responsePacketList.add(makePacketByteArray(i));
         }
-    }
-
-    public byte[] intToByteArray(int value) {
-        byte[] byteArray = new byte[4];
-        byteArray[0] = (byte) (value >> 24);
-        byteArray[1] = (byte) (value >> 16);
-        byteArray[2] = (byte) (value >> 8);
-        byteArray[3] = (byte) (value);
-        return  byteArray;
     }
 }

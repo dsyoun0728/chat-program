@@ -4,22 +4,11 @@ import util.Function;
 
 import java.util.ArrayList;
 
-public class RequestPacket implements ProtocolPacket {
-    byte functionNum;
-    int contentsLength;
-    byte[] contents;
-    int totalPacketNum;
-    byte[] totalPacketNumByteArray;
-    byte[] optionalInfo = new byte[34];
+public class RequestPacket extends ProtocolPacket {
     public ArrayList<byte[]> requestPacketList = new ArrayList<byte[]>();
 
     public RequestPacket(String functionName, byte[] contents, byte[] optionalInfo) {
-        this.functionNum = Function.getFunctionByte(functionName);
-        this.contentsLength = contents.length;
-        this.contents = contents;
-        this.totalPacketNum = (int) Math.ceil((double) this.contentsLength / 80);
-        this.totalPacketNumByteArray = intToByteArray(totalPacketNum);
-        this.optionalInfo = optionalInfo;
+        super(Function.getFunctionByte(functionName), contents, optionalInfo);
 
         makePacketList();
     }
@@ -59,14 +48,5 @@ public class RequestPacket implements ProtocolPacket {
         for(int i = 0; i < totalPacketNum; i ++) {
             requestPacketList.add(makePacketByteArray(i));
         }
-    }
-
-    public byte[] intToByteArray(int value) {
-        byte[] byteArray = new byte[4];
-        byteArray[0] = (byte) (value >> 24);
-        byteArray[1] = (byte) (value >> 16);
-        byteArray[2] = (byte) (value >> 8);
-        byteArray[3] = (byte) (value);
-        return  byteArray;
     }
 }
