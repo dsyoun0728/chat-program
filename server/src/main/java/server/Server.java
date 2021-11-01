@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,7 +19,7 @@ public class Server {
     Selector selector;
 
     // 연결된 클라이언트를 관리할 컬렉션
-    List<Client> connections = new Vector<Client>();
+    List<Client> connections = new CopyOnWriteArrayList<Client>();
 
     void startServer() {
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
