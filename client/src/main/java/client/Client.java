@@ -111,22 +111,24 @@ public class Client {
         userNick = sc.nextLine();
         RequestPacket rp = new RequestPacket(
                 "SendText",
-                true,
                 userNick.getBytes(StandardCharsets.UTF_8),
                 userNick.getBytes(StandardCharsets.UTF_8)
         );
-        client.send(rp.requestPacketByteArray);
+        for(byte[] byteArray : rp.requestPacketList) {
+            client.send(byteArray);
+        }
 
         String contentsStr;
         while(true) {
             contentsStr = sc.nextLine();
             RequestPacket requestPacket = new RequestPacket(
                     "SendText",
-                    true,
                     contentsStr.getBytes(StandardCharsets.UTF_8),
                     userNick.getBytes(StandardCharsets.UTF_8)
             );
-            client.send(requestPacket.requestPacketByteArray);
+            for(byte[] byteArray : rp.requestPacketList) {
+                client.send(byteArray);
+            }
         }
 
 //        // request packet 제작 예시

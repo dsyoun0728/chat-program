@@ -1,39 +1,72 @@
 package packet;
 
-import packet.ProtocolPacket;
 import util.Function;
 
-public class RequestPacket extends ProtocolPacket {
-    byte functionNum;
-    public byte[] requestPacketByteArray = new byte[120];
+import java.util.ArrayList;
 
-    public RequestPacket(String functionName, boolean isLast,  byte[] contents, byte[] optionalInfo) {
-        super(isLast, contents, optionalInfo);
+public class RequestPacket implements ProtocolPacket {
+    byte functionNum;
+    int contentsLength;
+    byte[] contents;
+    int totalPacketNum;
+    byte[] totalPacketNumByteArray;
+    byte[] optionalInfo = new byte[34];
+    public ArrayList<byte[]> requestPacketList = new ArrayList<byte[]>();
+
+    public RequestPacket(String functionName, byte[] contents, byte[] optionalInfo) {
         this.functionNum = Function.getFunctionByte(functionName);
-        makeRequestPacketByteArray();
+        this.contentsLength = contents.length;
+        this.contents = contents;
+        this.totalPacketNum = (int) Math.ceil((double) this.contentsLength / 80);
+        this.totalPacketNumByteArray = intToByteArray(totalPacketNum);
+        this.optionalInfo = optionalInfo;
+
+        makePacketList();
     }
 
-    public void makeRequestPacketByteArray() {
+    @Override
+    public byte[] makePacketByteArray(int currentPacketNum) {
         int destPos = 0;
+        boolean lastFlag = this.totalPacketNum -1 == currentPacketNum;
+        byte thisContentsLength = (byte) (lastFlag ? this.contentsLength - 80 * currentPacketNum : 80);
+        byte lastAndLength = (byte) (lastFlag ? 1 << 7 + thisContentsLength : thisContentsLength);
+        byte[] requestPacketByteArray = new byte[120];
 
-        // 0 ~ 2            unique id
-        System.arraycopy(randomUniqueIDByteArray, 0, requestPacketByteArray, destPos, randomUniqueIDByteArray.length);
-        destPos += randomUniqueIDByteArray.length;
-
-        // 3                    function 정보
+        // 0                    function 정보
         requestPacketByteArray[destPos] = functionNum;
         destPos += 1;
 
-        // 4                    last flag & contents length
+        // 1                    last flag & contents length
         requestPacketByteArray[destPos] = lastAndLength;
         destPos += 1;
 
-        // 5 ~ 84           contents
-        System.arraycopy(contentsByteArray, 0, requestPacketByteArray, destPos, contentsByteArray.length);
+        // 2 ~ 81           contents
+        System.arraycopy(contents, 80 * currentPacketNum, requestPacketByteArray, destPos, thisContentsLength);
         destPos += 80;
 
-        // 85 ~ 119       optional information
-        System.arraycopy(optionalInfoByteArray, 0, requestPacketByteArray, destPos, optionalInfoByteArray.length);
-        destPos += 35;
+        // 82 ~ 85       optional information (Total Packet Number)
+        System.arraycopy(totalPacketNumByteArray, 0, requestPacketByteArray, destPos, totalPacketNumByteArray.length);
+        destPos += 4;
+
+        // 86 ~ 119     optional information
+        System.arraycopy(optionalInfo, 0, requestPacketByteArray, destPos, optionalInfo.length);
+        destPos += 34;
+        return requestPacketByteArray;
+    }
+
+    @Override
+    public void makePacketList() {
+        for(int i = 0; i < totalPacketNum; i ++) {
+            requestPacketList.add(makePacketByteArray(i));
+        }
+    }
+
+    public byte[] intToByteArray(int value) {
+        byte[] byteArray = new byte[4];
+        byteArray[0] = (byte) (value >> 24);
+        byteArray[1] = (byte) (value >> 16);
+        byteArray[2] = (byte) (value >> 8);
+        byteArray[3] = (byte) (value);
+        return  byteArray;
     }
 }
