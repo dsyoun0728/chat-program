@@ -1,13 +1,17 @@
 package client;
 
 import packet.RequestPacket;
+import packet.ResponsePacket;
 import parser.ResponseParser;
+import server.Server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,6 +19,7 @@ import java.util.concurrent.Executors;
 public class Client {
     ExecutorService executorService;
     SocketChannel socketChannel;
+    ArrayList<byte[]> contentsByteArrayList = new ArrayList<byte[]>();
 
     void startClient() {
         try {
@@ -61,20 +66,22 @@ public class Client {
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
                     ResponseParser responseParser = new ResponseParser(responsePacketByteArray);
+                    contentsByteArrayList.add(responseParser.contents);
 
-                    // Contents 분리
-                    byte[] originalContents = responseParser.contents;
-                    byte[] contents = new byte[responseParser.contentsLength];
-                    System.arraycopy(originalContents,0,contents,0,contents.length);
-                    String msg = new String(contents,StandardCharsets.UTF_8);
+                    if(responseParser.lastFlag==0) {
+                        return;
+                    } else {
+                        String contentsStr = null;
+                        for(int i=0; i<contentsByteArrayList.size()-1;i++) {
+                            contentsStr += new String(contentsByteArrayList.get(i),StandardCharsets.UTF_8);
+                        }
+                        byte[] originalContents = responseParser.contents;
+                        byte[] contents = new byte[responseParser.contentsLength];
+                        System.arraycopy(originalContents,0,contents,0,contents.length);
+                        contentsStr += new String(contents,StandardCharsets.UTF_8);
 
-                    /*// Optional Info 분리
-                    byte[] originalOpInfo = responseParser.optionalInfo;
-                    byte[] OpInfo = new byte[9];    // 임시 값
-                    System.arraycopy(originalOpInfo,0,OpInfo,0,OpInfo.length);
-                    String id = new String(OpInfo,StandardCharsets.UTF_8);*/
-
-                    System.out.println(msg);
+                        System.out.println(contentsStr);
+                    }
                 } catch (Exception e) {
                     System.out.println("서버 통신 안됨");
                     stopClient();
@@ -126,7 +133,7 @@ public class Client {
                     contentsStr.getBytes(StandardCharsets.UTF_8),
                     userNick.getBytes(StandardCharsets.UTF_8)
             );
-            for(byte[] byteArray : rp.requestPacketList) {
+            for(byte[] byteArray : requestPacket.requestPacketList) {
                 client.send(byteArray);
             }
         }

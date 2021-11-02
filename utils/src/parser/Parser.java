@@ -3,7 +3,7 @@ import util.UniqueID;
 
 public class Parser {
     String uniqueID;
-    int lastFlag;
+    public int lastFlag;
     public int contentsLength;
     public byte[] contents;
     public byte[] optionalInfo;
