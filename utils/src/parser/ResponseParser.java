@@ -17,14 +17,14 @@ public class ResponseParser extends Parser {
         this.status = getStatus(responsePacketArray[3]);
         this.functionName = Function.getFuncionString(responsePacketArray[85]);
 
-        /*// 데이터 참고용 (추후 삭제 예정 부분)
+        // 데이터 참고용 (추후 삭제 예정 부분)
         System.out.println("uniqueID: " + this.uniqueID);
         System.out.println("status: " + this.status);
         System.out.println("lastFlag: " + this.lastFlag);
         System.out.println("contentsLength: " + this.contentsLength);
         System.out.println("contents: " + this.contents);
         System.out.println("optionalInfo: " + this.optionalInfo);
-        System.out.println("functionName: " + this.functionName);*/
+        System.out.println("functionName: " + this.functionName);
     }
 
     public String getStatus(byte code) {

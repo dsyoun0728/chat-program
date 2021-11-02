@@ -69,18 +69,19 @@ public class Client {
                     contentsByteArrayList.add(responseParser.contents);
 
                     if(responseParser.lastFlag==0) {
-                        return;
+                        continue;
                     } else {
-                        String contentsStr = null;
+                        String contentsStr = "";
                         for(int i=0; i<contentsByteArrayList.size()-1;i++) {
                             contentsStr += new String(contentsByteArrayList.get(i),StandardCharsets.UTF_8);
                         }
-                        byte[] originalContents = responseParser.contents;
-                        byte[] contents = new byte[responseParser.contentsLength];
-                        System.arraycopy(originalContents,0,contents,0,contents.length);
-                        contentsStr += new String(contents,StandardCharsets.UTF_8);
+                        byte[] originalLastContents = responseParser.contents;
+                        byte[] lastContents = new byte[responseParser.contentsLength];
+                        System.arraycopy(originalLastContents,0,lastContents,0,lastContents.length);
+                        contentsStr += new String(lastContents,StandardCharsets.UTF_8);
 
                         System.out.println(contentsStr);
+                        contentsByteArrayList.clear();
                     }
                 } catch (Exception e) {
                     System.out.println("서버 통신 안됨");

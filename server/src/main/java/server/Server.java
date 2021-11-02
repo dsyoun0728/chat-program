@@ -216,10 +216,10 @@ public class Server {
                                 );
                                 for(byte[] byteArray : responsePacket.responsePacketList) {
                                     c.responsePacketByteArray = byteArray;
+                                    SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
+                                    key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
                                 }
 //                                c.responsePacketByteArray = responsePacket.responsePacketByteArray;
-                                SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
-                                key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
                             } else {
                                 SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                                 key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
@@ -236,16 +236,21 @@ public class Server {
                     Client.this.contentsByteArrayList.add(requestParser.contents);
                     if(requestParser.lastFlag==0) {
                         SelectionKey key = client.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
-                        key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
+                        key.interestOps(SelectionKey.OP_READ);                                                 // Key의 작업 유형 변경
                         return;
                     } else {
-                        String contentsStr = null;
-                        for(int i=0; i<contentsByteArrayList.size();i++) {
+                        String contentsStr = "";
+                        for(int i=0; i<contentsByteArrayList.size()-1;i++) {
                             contentsStr += new String(contentsByteArrayList.get(i),StandardCharsets.UTF_8);
                         }
+                        byte[] originalLastContents = requestParser.contents;
+                        byte[] lastContents = new byte[requestParser.contentsLength];
+                        System.arraycopy(originalLastContents,0,lastContents,0,lastContents.length);
+                        contentsStr += new String(lastContents,StandardCharsets.UTF_8);
+
                         String userNickNotice = client.userNick+"> ";
                         contentsStr = userNickNotice + contentsStr;
-
+                        contentsByteArrayList.clear();
                         for (Client c : connections) {
                             if (!c.equals(client)) {
                                 ResponsePacket responsePacket = new ResponsePacket(
@@ -267,30 +272,6 @@ public class Server {
                         }
                         selector.wakeup();
                     }
-
-
-
-
-                    // 자신을 제외한 모든 클라이언트에게 문자열을 전송하는 코드
-                    /*for (Client c : connections) {
-                        if (!c.equals(client)) {
-                            ResponsePacket responsePacket = new ResponsePacket(
-                                    (byte) 20,
-                                    (byte) 4,
-                                    true,
-                                    (userNickNotice+msg).getBytes(StandardCharsets.UTF_8),
-                                    "".getBytes(StandardCharsets.UTF_8)
-                            );
-                            c.responsePacketByteArray = responsePacket.responsePacketByteArray;
-                            SelectionKey key = c.socketChannel.keyFor(selector);
-                            key.interestOps(SelectionKey.OP_WRITE);
-                        } else {
-                            SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
-                            key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
-                        }
-                    }
-                    // 변경된 작업 유형을 감지하도록 하기 위해 Selector의 select() 블로킹 해제하고 다시 실행하도록 함
-                    selector.wakeup();*/
                 } catch (IOException e) {
                     System.out.println("server receive IOException\n\n\n");
                     e.printStackTrace();
