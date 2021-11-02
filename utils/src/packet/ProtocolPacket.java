@@ -9,13 +9,13 @@ public abstract class ProtocolPacket {
     byte[] totalPacketNumByteArray;
     byte[] optionalInfo;
 
-    public ProtocolPacket(byte functionNum, byte[] contents, byte[] optionalInfo) {
+    public ProtocolPacket(byte functionNum, byte[] contents) {
         this.functionNum = functionNum;
         this.contentsLength = contents.length;
         this.contents = contents;
         this.totalPacketNum = (int) Math.ceil((double) this.contentsLength / 80);
         this.totalPacketNumByteArray = intToByteArray(totalPacketNum);
-        this.optionalInfo = optionalInfo;
+        this.optionalInfo = new byte[totalPacketNum * 38];
     }
 
     abstract byte[] makePacketByteArray(int currentPacketNum);
