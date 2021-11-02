@@ -27,14 +27,17 @@ public class ResponseParser implements Parser {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(byteArrayList.size() * 80);
         int position = 0;
         for (byte[] byteArray : byteArrayList) {
-            byteBuffer.put(byteArray);
-            if (byteBuffer.position() - position != ( byteArray[1] & 127) ) {
+            byte thisContentsLength = (byte) (byteArray[1] & 127);
+            byteBuffer.put(Parser.sliceByteArray(byteArray, 2, thisContentsLength));
+            if (byteBuffer.position() - position != thisContentsLength ) {
                 throw new IOException("\n\npacket의 contents length 맞지 않음\n\n");
             }
+            position = byteBuffer.position();
         }
         byteBuffer.flip();
         byte[] returnByteArray = new byte[byteBuffer.remaining()];
         byteBuffer.get(returnByteArray);
+        byteBuffer.clear();
         return returnByteArray;
     }
 
@@ -42,11 +45,12 @@ public class ResponseParser implements Parser {
     public byte[] getOptionalInfo(ArrayList<byte[]> byteArrayList) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(byteArrayList.size() * 38);
         for (byte[] byteArray : byteArrayList) {
-            byteBuffer.put(byteArray);
+            byteBuffer.put(Parser.sliceByteArray(byteArray, 82, 38));
         }
         byteBuffer.flip();
         byte[] returnByteArray = new byte[byteBuffer.remaining()];
         byteBuffer.get(returnByteArray);
+        byteBuffer.clear();
         return returnByteArray;
     }
 }
