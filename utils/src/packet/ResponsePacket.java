@@ -1,14 +1,17 @@
 package packet;
 
+import util.Function;
+
 import java.util.ArrayList;
 
 public class ResponsePacket extends ProtocolPacket {
-    byte responseCode;
     public ArrayList<byte[]> responsePacketList = new ArrayList<byte[]>();
 
     public ResponsePacket(byte responseCode, byte functionNum, byte[] contents, byte[] optionalInfo) {
-        super(functionNum, contents, optionalInfo);
-        this.responseCode = responseCode;
+        super(functionNum, contents);
+        System.arraycopy(totalPacketNumByteArray, 0, optionalInfo, 0, totalPacketNumByteArray.length);
+        optionalInfo[totalPacketNumByteArray.length] = responseCode;
+        System.arraycopy(optionalInfo, 0, optionalInfo, totalPacketNumByteArray.length + 1, optionalInfo.length);
 
         makePacketList();
     }
@@ -21,8 +24,8 @@ public class ResponsePacket extends ProtocolPacket {
         byte lastAndLength = (byte) (lastFlag ? 1 << 7 + thisContentsLength : thisContentsLength);
         byte[] responsePacketByteArray = new byte[120];
 
-        // 0                   response code
-        responsePacketByteArray[destPos] = responseCode;
+        // 0                    functionNum
+        responsePacketByteArray[destPos] = functionNum;
         destPos += 1;
 
         // 1                    last flag & contents length
@@ -33,17 +36,9 @@ public class ResponsePacket extends ProtocolPacket {
         System.arraycopy(contents, 80 * currentPacketNum, responsePacketByteArray, destPos, thisContentsLength);
         destPos += 80;
 
-        // 82 ~ 85       optional information (Total Packet Number)
-        System.arraycopy(totalPacketNumByteArray, 0, responsePacketByteArray, destPos, totalPacketNumByteArray.length);
-        destPos += 4;
-
-        // 86               optional information (functionNum)
-        responsePacketByteArray[destPos] = functionNum;
-        destPos += 1;
-
-        // 87 ~ 119     optional information
-        System.arraycopy(optionalInfo, 0, responsePacketByteArray, destPos, optionalInfo.length);
-        destPos += 33;
+        // 82 ~ 119       optional information (Total Packet Number + Response Code + etc)
+        System.arraycopy(totalPacketNumByteArray, 38 * currentPacketNum, responsePacketByteArray, destPos, 38);
+        destPos += 38;
 
         return responsePacketByteArray;
     }

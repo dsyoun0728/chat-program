@@ -8,7 +8,9 @@ public class RequestPacket extends ProtocolPacket {
     public ArrayList<byte[]> requestPacketList = new ArrayList<byte[]>();
 
     public RequestPacket(String functionName, byte[] contents, byte[] optionalInfo) {
-        super(Function.getFunctionByte(functionName), contents, optionalInfo);
+        super(Function.getFunctionByte(functionName), contents);
+        System.arraycopy(totalPacketNumByteArray, 0, optionalInfo, 0, totalPacketNumByteArray.length);
+        System.arraycopy(optionalInfo, 0, optionalInfo, totalPacketNumByteArray.length, optionalInfo.length);
 
         makePacketList();
     }
@@ -33,13 +35,10 @@ public class RequestPacket extends ProtocolPacket {
         System.arraycopy(contents, 80 * currentPacketNum, requestPacketByteArray, destPos, thisContentsLength);
         destPos += 80;
 
-        // 82 ~ 85       optional information (Total Packet Number)
-        System.arraycopy(totalPacketNumByteArray, 0, requestPacketByteArray, destPos, totalPacketNumByteArray.length);
-        destPos += 4;
+        // 82 ~ 119       optional information (Total Packet Number + etc)
+        System.arraycopy(totalPacketNumByteArray, 38 * currentPacketNum, requestPacketByteArray, destPos, 38);
+        destPos += 38;
 
-        // 86 ~ 119     optional information
-        System.arraycopy(optionalInfo, 0, requestPacketByteArray, destPos, optionalInfo.length);
-        destPos += 34;
         return requestPacketByteArray;
     }
 
