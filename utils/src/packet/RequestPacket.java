@@ -38,7 +38,7 @@ public class RequestPacket extends ProtocolPacket {
         destPos += 4;
 
         // 86 ~ 119     optional information
-        System.arraycopy(optionalInfo, 0, requestPacketByteArray, destPos, optionalInfo.length);
+        System.arraycopy(optionalInfo, 34 * currentPacketNum, requestPacketByteArray, destPos, 34);
         destPos += 34;
         return requestPacketByteArray;
     }

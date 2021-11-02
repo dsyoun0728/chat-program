@@ -42,7 +42,7 @@ public class ResponsePacket extends ProtocolPacket {
         destPos += 1;
 
         // 87 ~ 119     optional information
-        System.arraycopy(optionalInfo, 0, responsePacketByteArray, destPos, optionalInfo.length);
+        System.arraycopy(optionalInfo, 33 * currentPacketNum, responsePacketByteArray, destPos, 33);
         destPos += 33;
 
         return responsePacketByteArray;
