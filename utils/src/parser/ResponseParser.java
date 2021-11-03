@@ -7,10 +7,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public class ResponseParser implements Parser {
+
     @Override
-    public boolean isLast(byte[] byteArray) {
-        return byteArray[1] >> 7 == -1;
-    }
+    public boolean isLast(byte[] byteArray) { return byteArray[1] >> 7 == -1; }
 
     @Override
     public String getFunctionName(ArrayList<byte[]> byteArrayList) {

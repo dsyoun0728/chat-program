@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public interface Parser {
+
     // 마지막 packet임을 확인하는 부분
     boolean isLast(byte[] byteArray);
 

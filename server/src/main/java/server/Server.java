@@ -1,6 +1,5 @@
 package server;
 
-import packet.RequestPacket;
 import parser.*;
 import packet.ResponsePacket;
 
@@ -18,6 +17,7 @@ public class Server {
     ExecutorService executorService;
     ServerSocketChannel serverSocketChannel;
     Selector selector;
+    RequestParser requestParser = new RequestParser();
 
     // 연결된 클라이언트를 관리할 컬렉션
     List<Client> connections = new CopyOnWriteArrayList<Client>();
@@ -161,8 +161,7 @@ public class Server {
         SocketChannel socketChannel;                                                                // 여기서의 SocketChannel은 서버쪽의 것
         String userNick;
         boolean userNickRegist = false;                                                             // ID 등록 여부
-        byte[] responsePacketByteArray;
-        ArrayList<byte[]> contentsByteArrayList = new ArrayList<byte[]>();
+        ArrayList<byte[]> packetByteArrayList = new ArrayList<byte[]>();
 
         Client(SocketChannel socketChannel) throws IOException {
             this.socketChannel = socketChannel;                                                     // 매개값으로 socketChannel 필드 초기화
@@ -175,7 +174,7 @@ public class Server {
         void receive(SelectionKey selectionKey) {
             Runnable readRunnable = () -> {
                 try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(200);
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(120);
 
                     //상대방이 비정상 종료를 했을 경우 자동 IOException 발생
                     int byteCount = socketChannel.read(byteBuffer);                                     // socketChannel read() 데이터 받기
@@ -195,11 +194,9 @@ public class Server {
 
                         // ID 뽑기
                         byte[] requestPacketByteArray = byteBuffer.array();
-                        RequestParser requestParser = new RequestParser(requestPacketByteArray);
-                        byte[] originalContents = requestParser.contents;
-                        byte[] id = new byte[requestParser.contentsLength];
-                        System.arraycopy(originalContents,0,id,0,id.length);
-                        client.userNick = new String(id,StandardCharsets.UTF_8);
+                        client.packetByteArrayList.add(requestPacketByteArray);
+                        client.userNick = new String(requestParser.getContents(packetByteArrayList),StandardCharsets.UTF_8);
+                        client.packetByteArrayList.clear();
                         byteBuffer.clear();
 
                         // 서버에 출력
@@ -212,14 +209,11 @@ public class Server {
                                         (byte) 20,
                                         (byte) 4,
                                         ("Server> "+client.userNick +"님이 입장하셨습니다").getBytes(StandardCharsets.UTF_8),
-                                        "".getBytes(StandardCharsets.UTF_8)
+                                        "1".getBytes(StandardCharsets.UTF_8)
                                 );
-                                for(byte[] byteArray : responsePacket.responsePacketList) {
-                                    c.responsePacketByteArray = byteArray;
-                                    SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
-                                    key.interestOps(SelectionKey.OP_WRITE);                                         // Key의 작업 유형 변경
-                                }
-//                                c.responsePacketByteArray = responsePacket.responsePacketByteArray;
+                                c.packetByteArrayList = responsePacket.responsePacketList;
+                                SelectionKey key = c.socketChannel.keyFor(selector);
+                                key.interestOps(SelectionKey.OP_WRITE);
                             } else {
                                 SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                                 key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
@@ -232,25 +226,17 @@ public class Server {
                     // broadcast
                     byteBuffer.flip();
                     byte[] requestPacketByteArray = byteBuffer.array();
-                    RequestParser requestParser = new RequestParser(requestPacketByteArray);
-                    Client.this.contentsByteArrayList.add(requestParser.contents);
-                    if(requestParser.lastFlag==0) {
+                    client.packetByteArrayList.add(requestPacketByteArray);
+                    if(!requestParser.isLast(requestPacketByteArray)) {
                         SelectionKey key = client.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                         key.interestOps(SelectionKey.OP_READ);                                                 // Key의 작업 유형 변경
+                        selector.wakeup();
                         return;
                     } else {
-                        String contentsStr = "";
-                        for(int i=0; i<contentsByteArrayList.size()-1;i++) {
-                            contentsStr += new String(contentsByteArrayList.get(i),StandardCharsets.UTF_8);
-                        }
-                        byte[] originalLastContents = requestParser.contents;
-                        byte[] lastContents = new byte[requestParser.contentsLength];
-                        System.arraycopy(originalLastContents,0,lastContents,0,lastContents.length);
-                        contentsStr += new String(lastContents,StandardCharsets.UTF_8);
-
+                        String contentsStr = new String(requestParser.getContents(client.packetByteArrayList),StandardCharsets.UTF_8);
                         String userNickNotice = client.userNick+"> ";
                         contentsStr = userNickNotice + contentsStr;
-                        contentsByteArrayList.clear();
+
                         for (Client c : connections) {
                             if (!c.equals(client)) {
                                 ResponsePacket responsePacket = new ResponsePacket(
@@ -259,11 +245,9 @@ public class Server {
                                         contentsStr.getBytes(StandardCharsets.UTF_8),
                                         userNick.getBytes(StandardCharsets.UTF_8)
                                 );
-                                for(byte[] byteArray : responsePacket.responsePacketList) {
-                                    c.responsePacketByteArray = byteArray;
-                                    SelectionKey key = c.socketChannel.keyFor(selector);
-                                    key.interestOps(SelectionKey.OP_WRITE);
-                                }
+                                c.packetByteArrayList = responsePacket.responsePacketList;
+                                SelectionKey key = c.socketChannel.keyFor(selector);
+                                key.interestOps(SelectionKey.OP_WRITE);
                             }
                             else {
                                 SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
@@ -283,13 +267,11 @@ public class Server {
                                         (byte) 20,
                                         (byte) 4,
                                         (Client.this.userNick +"님의 연결이 종료되었습니다").getBytes(StandardCharsets.UTF_8),
-                                        "".getBytes(StandardCharsets.UTF_8)
+                                        "1".getBytes(StandardCharsets.UTF_8)
                                 );
-                                for(byte[] byteArray : responsePacket.responsePacketList) {
-                                    c.responsePacketByteArray = byteArray;
-                                    SelectionKey key = c.socketChannel.keyFor(selector);
-                                    key.interestOps(SelectionKey.OP_WRITE);
-                                }
+                                c.packetByteArrayList = responsePacket.responsePacketList;
+                                SelectionKey key = c.socketChannel.keyFor(selector);
+                                key.interestOps(SelectionKey.OP_WRITE);
                             }else {
                                 SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                                 key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
@@ -313,41 +295,38 @@ public class Server {
 
 
         void send(SelectionKey selectionKey) {
-            Runnable writeRunnable = () -> {
-                try {
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(responsePacketByteArray);
-                    socketChannel.write(byteBuffer);
+            Client client = (Client) selectionKey.attachment();
 
-                    selectionKey.interestOps(SelectionKey.OP_READ);                                     // 작업 유형을 읽기 작업 유형으로 변경
-                    selector.wakeup();                                                                  // select() 블로킹 해제
-                } catch (IOException e) {
-                    System.out.println("server send IOException\n\n\n");
-                    e.printStackTrace();
+            for (byte[] byteArray : client.packetByteArrayList) {
+                Runnable writeRunnable = () -> {
                     try {
-                        System.out.println("[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
-                        connections.remove(this);                                                       // 예외가 발생한 Client 제거
-                        socketChannel.close();                                                             // SocketChannel 닫기
-                    } catch (IOException e2) { System.out.println("receive socketChannel close IOException\n\n\n" + e2 + "\n\n\n"); }
-                } catch (Exception e) {
-                    System.out.println("server send Exception\n\n\n");
-                    e.printStackTrace();
-                }
-            };
-            executorService.submit(writeRunnable);
+                        ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
+                        socketChannel.write(byteBuffer);
+                    } catch (IOException e) {
+                        System.out.println("server send IOException\n\n\n");
+                        e.printStackTrace();
+                        try {
+                            System.out.println("[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
+                            connections.remove(this);                                                       // 예외가 발생한 Client 제거
+                            socketChannel.close();                                                             // SocketChannel 닫기
+                        } catch (IOException e2) {
+                            System.out.println("receive socketChannel close IOException\n\n\n" + e2 + "\n\n\n");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("server send Exception\n\n\n");
+                        e.printStackTrace();
+                    }
+                };
+                executorService.submit(writeRunnable);
+            }
+            selectionKey.interestOps(SelectionKey.OP_READ);                                     // 작업 유형을 읽기 작업 유형으로 변경
+            selector.wakeup();
+            client.packetByteArrayList.clear();
         }
     }
 
     public static void main(String[] args) {
         Server server = new Server();
         server.startServer();
-
-//        // response packet 제작 예시
-//        ResponsePacket responsePacket = new ResponsePacket(
-//                (byte) 20,
-//                (byte) 16,
-//                true,
-//                "200".getBytes(StandardCharsets.UTF_8),
-//                "nonono".getBytes(StandardCharsets.UTF_8)
-//        );
     }
 }
