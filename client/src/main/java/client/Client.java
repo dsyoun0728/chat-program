@@ -1,8 +1,7 @@
 package client;
 
 import packet.RequestPacket;
-import parser.Parser;
-import parser.ResponseParser;
+import parser.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -20,13 +19,21 @@ public class Client {
     ArrayList<byte[]> packetByteArrayList = new ArrayList<byte[]>();
     Parser responseParser = new ResponseParser();
 
-    void startClient() {
+    void startClient(Client client, String userNick) {
         try {
             executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
             socketChannel.connect(new InetSocketAddress(5001));
-            System.out.println("연결 완료");
+            System.out.print("서버 연결 완료");
+
+            RequestPacket loginPacket = new RequestPacket(
+                    "Login",
+                    userNick.getBytes(StandardCharsets.UTF_8),
+                    "".getBytes(StandardCharsets.UTF_8)
+            );
+            client.send(loginPacket.requestPacketList);
+            System.out.println(" 및 (" + userNick + ")로 로그인 완료");
 
         } catch (IOException e) {
             System.out.println("startClient try-catch block IOException\n\n\n" + e + "\n\n\n");
@@ -102,18 +109,12 @@ public class Client {
 
     public static void main(String[] args) {
         Client client = new Client();
-        client.startClient();
-
-        // ID 입력하기
-        String userNick;
+        System.out.print("userNick을 입력하세요 > ");
         Scanner sc = new Scanner(System.in);
+        String userNick;
         userNick = sc.nextLine();
-        RequestPacket rp = new RequestPacket(
-                "SendText",
-                userNick.getBytes(StandardCharsets.UTF_8),
-                "1".getBytes(StandardCharsets.UTF_8)
-        );
-        client.send(rp.requestPacketList);
+
+        client.startClient(client, userNick);
 
         String contentsStr;
         while(true) {
@@ -125,17 +126,6 @@ public class Client {
             );
             client.send(requestPacket.requestPacketList);
         }
-
-//        // request packet 제작 예시
-//        Scanner scanner = new Scanner(System.in);//
-//        String contentsStr = scanner.nextLine();
-//        String userNick = scanner.nextLine();
-//        RequestPacket requestPacket = new RequestPacket(
-//                "SendFile",
-//                true,
-//                contentsStr.getBytes(StandardCharsets.UTF_8),
-//                userNick.getBytes(StandardCharsets.UTF_8)
-//        );
     }
 
 
