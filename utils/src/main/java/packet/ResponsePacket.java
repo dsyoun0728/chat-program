@@ -9,9 +9,9 @@ public class ResponsePacket extends ProtocolPacket {
 
     public ResponsePacket(byte responseCode, byte functionNum, byte[] contents, byte[] optionalInfo) {
         super(functionNum, contents);
-        System.arraycopy(totalPacketNumByteArray, 0, optionalInfo, 0, totalPacketNumByteArray.length);
-        optionalInfo[totalPacketNumByteArray.length] = responseCode;
-        System.arraycopy(optionalInfo, 0, optionalInfo, totalPacketNumByteArray.length + 1, optionalInfo.length);
+        System.arraycopy(totalPacketNumByteArray, 0, this.optionalInfo, 0, totalPacketNumByteArray.length);
+        this.optionalInfo[totalPacketNumByteArray.length] = responseCode;
+        System.arraycopy(optionalInfo, 0, this.optionalInfo, totalPacketNumByteArray.length + 1, optionalInfo.length);
 
         makePacketList();
     }
@@ -21,7 +21,7 @@ public class ResponsePacket extends ProtocolPacket {
         int destPos = 0;
         boolean lastFlag = this.totalPacketNum -1 == currentPacketNum;
         byte thisContentsLength = (byte) (lastFlag ? this.contentsLength - 80 * currentPacketNum : 80);
-        byte lastAndLength = (byte) (lastFlag ? 1 << 7 + thisContentsLength : thisContentsLength);
+        byte lastAndLength = (byte) (lastFlag ? (byte)(1 << 7) + thisContentsLength : thisContentsLength);
         byte[] responsePacketByteArray = new byte[120];
 
         // 0                    functionNum
@@ -37,7 +37,7 @@ public class ResponsePacket extends ProtocolPacket {
         destPos += 80;
 
         // 82 ~ 119       optional information (Total Packet Number + Response Code + etc)
-        System.arraycopy(totalPacketNumByteArray, 38 * currentPacketNum, responsePacketByteArray, destPos, 38);
+        System.arraycopy(this.optionalInfo, 38 * currentPacketNum, responsePacketByteArray, destPos, 38);
         destPos += 38;
 
         return responsePacketByteArray;

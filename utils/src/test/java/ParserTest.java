@@ -7,7 +7,7 @@ public class ParserTest {
     Parser responseParser = new ResponseParser();
 
     @Test
-    public void requestParserIsLastTrueTest(){
+    public void requestParserIsLastTrueTest() {
         byte[] testByteArray = new byte[120];
         testByteArray[1] = (byte) 128;
         Assert.assertTrue(requestParser.isLast(testByteArray));
@@ -20,7 +20,7 @@ public class ParserTest {
     }
 
     @Test
-    public void responseParserIsLastTrueTest(){
+    public void responseParserIsLastTrueTest() {
         byte[] testByteArray = new byte[120];
         testByteArray[1] = (byte) 128;
         Assert.assertTrue(responseParser.isLast(testByteArray));
