@@ -4,11 +4,9 @@ import util.Function;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class RequestParser implements Parser {
-
     @Override
     public boolean isLast(byte[] byteArray) {
         return byteArray[1] >> 7 == -1;
@@ -26,7 +24,7 @@ public class RequestParser implements Parser {
 
     @Override
     public byte[] getContents(ArrayList<byte[]> byteArrayList) throws IOException {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(byteArrayList.size() * 120);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(byteArrayList.size() * 80);
         int position = 0;
         for (byte[] byteArray : byteArrayList) {
             byte thisContentsLength = (byte) (byteArray[1] & 127);

@@ -2,21 +2,15 @@ package packet;
 
 import util.Function;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class RequestPacket extends ProtocolPacket {
-
     public ArrayList<byte[]> requestPacketList = new ArrayList<byte[]>();
-    int optionalLength;
 
     public RequestPacket(String functionName, byte[] contents, byte[] optionalInfo) {
         super(Function.getFunctionByte(functionName), contents);
-
-        /*System.arraycopy(totalPacketNumByteArray, 0, this.optionalInfo, 0, totalPacketNumByteArray.length);
-        System.arraycopy(optionalInfo, 0, this.optionalInfo, totalPacketNumByteArray.length, optionalInfo.length);*/
-        this.optionalInfo = optionalInfo;
-        this.optionalLength = optionalInfo.length;
+        System.arraycopy(totalPacketNumByteArray, 0, optionalInfo, 0, totalPacketNumByteArray.length);
+        System.arraycopy(optionalInfo, 0, optionalInfo, totalPacketNumByteArray.length, optionalInfo.length);
 
         makePacketList();
     }
@@ -26,10 +20,7 @@ public class RequestPacket extends ProtocolPacket {
         int destPos = 0;
         boolean lastFlag = this.totalPacketNum -1 == currentPacketNum;
         byte thisContentsLength = (byte) (lastFlag ? this.contentsLength - 80 * currentPacketNum : 80);
-
-        byte thisOptionalLength = (byte) (lastFlag ? this.optionalLength - 38 * currentPacketNum : 38);
-
-        byte lastAndLength = (byte) (lastFlag ? (byte)(1 << 7) + thisContentsLength : thisContentsLength);
+        byte lastAndLength = (byte) (lastFlag ? 1 << 7 + thisContentsLength : thisContentsLength);
         byte[] requestPacketByteArray = new byte[120];
 
         // 0                    function 정보
@@ -45,8 +36,7 @@ public class RequestPacket extends ProtocolPacket {
         destPos += 80;
 
         // 82 ~ 119       optional information (Total Packet Number + etc)
-        //System.arraycopy(optionalInfo,38 * currentPacketNum, requestPacketByteArray, destPos, thisOptionalLength);
-        //System.arraycopy(totalPacketNumByteArray, 38 * currentPacketNum, requestPacketByteArray, destPos, totalPacketNumByteArray.length);
+        System.arraycopy(totalPacketNumByteArray, 38 * currentPacketNum, requestPacketByteArray, destPos, 38);
         destPos += 38;
 
         return requestPacketByteArray;

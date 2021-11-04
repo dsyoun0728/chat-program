@@ -5,8 +5,8 @@ public abstract class ProtocolPacket {
     byte functionNum;
     int contentsLength;
     byte[] contents;
-    public int totalPacketNum;
-    public byte[] totalPacketNumByteArray;
+    int totalPacketNum;
+    byte[] totalPacketNumByteArray;
     byte[] optionalInfo;
 
     public ProtocolPacket(byte functionNum, byte[] contents) {
