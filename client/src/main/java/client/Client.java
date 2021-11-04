@@ -1,14 +1,11 @@
 package client;
 
 import packet.RequestPacket;
-import packet.ResponsePacket;
 import parser.ResponseParser;
-import server.Server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,7 +16,8 @@ import java.util.concurrent.Executors;
 public class Client {
     ExecutorService executorService;
     SocketChannel socketChannel;
-    ArrayList<byte[]> contentsByteArrayList = new ArrayList<byte[]>();
+    ArrayList<byte[]> packetByteArrayList = new ArrayList<byte[]>();
+    ResponseParser responseParser = new ResponseParser();
 
     void startClient() {
         try {
@@ -55,7 +53,7 @@ public class Client {
         Runnable readRunnable = () -> {
             while (true) {
                 try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(200);
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(120);
 
                     int readByteCount = socketChannel.read(byteBuffer);
 
@@ -65,23 +63,14 @@ public class Client {
 
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
-                    ResponseParser responseParser = new ResponseParser(responsePacketByteArray);
-                    contentsByteArrayList.add(responseParser.contents);
+                    packetByteArrayList.add(responsePacketByteArray);
 
-                    if(responseParser.lastFlag==0) {
+                    if(!responseParser.isLast(responsePacketByteArray)) {
                         continue;
                     } else {
-                        String contentsStr = "";
-                        for(int i=0; i<contentsByteArrayList.size()-1;i++) {
-                            contentsStr += new String(contentsByteArrayList.get(i),StandardCharsets.UTF_8);
-                        }
-                        byte[] originalLastContents = responseParser.contents;
-                        byte[] lastContents = new byte[responseParser.contentsLength];
-                        System.arraycopy(originalLastContents,0,lastContents,0,lastContents.length);
-                        contentsStr += new String(lastContents,StandardCharsets.UTF_8);
-
+                        String contentsStr = new String(responseParser.getContents(packetByteArrayList),StandardCharsets.UTF_8);
                         System.out.println(contentsStr);
-                        contentsByteArrayList.clear();
+                        packetByteArrayList.clear();
                     }
                 } catch (Exception e) {
                     System.out.println("서버 통신 안됨");
@@ -93,21 +82,24 @@ public class Client {
         executorService.submit(readRunnable);
     }
 
-    private void send(byte[] requestPacketByteArray) {
-        Runnable writeRunnable = () -> {
-            try{
-                ByteBuffer byteBuffer = ByteBuffer.wrap(requestPacketByteArray);
-                socketChannel.write(byteBuffer);
-            } catch(IOException e) {
-                System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
-                stopClient();
-            } catch(Exception e) {
-                System.out.println("client send Exception\n\n\n" + e + "\n\n\n");
-                stopClient();
-            }
-        };
-        executorService.submit(writeRunnable);
+    private void send(ArrayList<byte[]> byteArrayList) {
+        for (byte[] byteArray : byteArrayList) {
+            Runnable writeRunnable = () -> {
+                try {
+                    ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
+                    socketChannel.write(byteBuffer);
+                } catch (IOException e) {
+                    System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
+                    stopClient();
+                } catch (Exception e) {
+                    System.out.println("client send Exception\n\n\n" + e + "\n\n\n");
+                    stopClient();
+                }
+            };
+            executorService.submit(writeRunnable);
+        }
     }
+
 
     public static void main(String[] args) {
         Client client = new Client();
@@ -120,11 +112,9 @@ public class Client {
         RequestPacket rp = new RequestPacket(
                 "SendText",
                 userNick.getBytes(StandardCharsets.UTF_8),
-                userNick.getBytes(StandardCharsets.UTF_8)
+                "1".getBytes(StandardCharsets.UTF_8)
         );
-        for(byte[] byteArray : rp.requestPacketList) {
-            client.send(byteArray);
-        }
+        client.send(rp.requestPacketList);
 
         String contentsStr;
         while(true) {
@@ -132,11 +122,9 @@ public class Client {
             RequestPacket requestPacket = new RequestPacket(
                     "SendText",
                     contentsStr.getBytes(StandardCharsets.UTF_8),
-                    userNick.getBytes(StandardCharsets.UTF_8)
+                    "1".getBytes(StandardCharsets.UTF_8)
             );
-            for(byte[] byteArray : requestPacket.requestPacketList) {
-                client.send(byteArray);
-            }
+            client.send(requestPacket.requestPacketList);
         }
 
 //        // request packet 제작 예시
