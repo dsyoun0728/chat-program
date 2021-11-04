@@ -17,7 +17,7 @@ public class Server {
     ExecutorService executorService;
     ServerSocketChannel serverSocketChannel;
     Selector selector;
-    RequestParser requestParser = new RequestParser();
+    Parser requestParser = new RequestParser();
 
     // 연결된 클라이언트를 관리할 컬렉션
     List<Client> connections = new CopyOnWriteArrayList<Client>();
@@ -248,6 +248,7 @@ public class Server {
                                 c.packetByteArrayList = responsePacket.responsePacketList;
                                 SelectionKey key = c.socketChannel.keyFor(selector);
                                 key.interestOps(SelectionKey.OP_WRITE);
+                                packetByteArrayList.clear();
                             }
                             else {
                                 SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
@@ -296,32 +297,31 @@ public class Server {
 
         void send(SelectionKey selectionKey) {
             Client client = (Client) selectionKey.attachment();
-
-            for (byte[] byteArray : client.packetByteArrayList) {
-                Runnable writeRunnable = () -> {
-                    try {
+            Runnable writeRunnable = () -> {
+                try {
+                    for (byte[] byteArray : client.packetByteArrayList) {
                         ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
                         socketChannel.write(byteBuffer);
-                    } catch (IOException e) {
-                        System.out.println("server send IOException\n\n\n");
-                        e.printStackTrace();
-                        try {
-                            System.out.println("[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
-                            connections.remove(this);                                                       // 예외가 발생한 Client 제거
-                            socketChannel.close();                                                             // SocketChannel 닫기
-                        } catch (IOException e2) {
-                            System.out.println("receive socketChannel close IOException\n\n\n" + e2 + "\n\n\n");
-                        }
-                    } catch (Exception e) {
+                    }
+                    client.packetByteArrayList.clear();
+                    selectionKey.interestOps(SelectionKey.OP_READ);                                     // 작업 유형을 읽기 작업 유형으로 변경
+                    selector.wakeup();
+                } catch (IOException e) {
+                    System.out.println("server send IOException\n\n\n");
+                    e.printStackTrace();
+                    try {
+                        System.out.println("[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
+                        connections.remove(this);                                                       // 예외가 발생한 Client 제거
+                        socketChannel.close();                                                             // SocketChannel 닫기
+                    } catch (IOException e2) {
+                        System.out.println("receive socketChannel close IOException\n\n\n" + e2 + "\n\n\n");
+                    }
+                } catch (Exception e) {
                         System.out.println("server send Exception\n\n\n");
                         e.printStackTrace();
-                    }
-                };
-                executorService.submit(writeRunnable);
-            }
-            selectionKey.interestOps(SelectionKey.OP_READ);                                     // 작업 유형을 읽기 작업 유형으로 변경
-            selector.wakeup();
-            client.packetByteArrayList.clear();
+                }
+            };
+            executorService.submit(writeRunnable);
         }
     }
 

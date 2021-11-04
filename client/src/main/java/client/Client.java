@@ -73,9 +73,7 @@ public class Client {
                     byte[] responsePacketByteArray = byteBuffer.array();
                     packetByteArrayList.add(responsePacketByteArray);
 
-                    if(!responseParser.isLast(responsePacketByteArray)) {
-                        continue;
-                    } else {
+                    if(responseParser.isLast(responsePacketByteArray)) {
                         String contentsStr = new String(responseParser.getContents(packetByteArrayList),StandardCharsets.UTF_8);
                         System.out.println(contentsStr);
                         packetByteArrayList.clear();
@@ -92,17 +90,17 @@ public class Client {
 
     private void send(ArrayList<byte[]> byteArrayList) {
         Runnable writeRunnable = () -> {
-            for (byte[] byteArray : byteArrayList) {
-                try {
+            try {
+                for (byte[] byteArray : byteArrayList) {
                     ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
                     socketChannel.write(byteBuffer);
-                } catch (IOException e) {
-                    System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
-                    stopClient();
-                } catch (Exception e) {
-                    System.out.println("client send Exception\n\n\n" + e + "\n\n\n");
-                    stopClient();
                 }
+            } catch (IOException e) {
+                System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
+                stopClient();
+            } catch (Exception e) {
+                System.out.println("client send Exception\n\n\n" + e + "\n\n\n");
+                stopClient();
             }
         };
         executorService.submit(writeRunnable);
