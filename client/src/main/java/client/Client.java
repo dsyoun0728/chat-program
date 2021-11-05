@@ -25,16 +25,13 @@ public class Client {
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
             socketChannel.connect(new InetSocketAddress(5001));
-            System.out.print("서버 연결 완료");
-
+            System.out.println("서버 연결 완료");
             RequestPacket loginPacket = new RequestPacket(
                     "Login",
                     userNick.getBytes(StandardCharsets.UTF_8),
                     "".getBytes(StandardCharsets.UTF_8)
             );
             client.send(loginPacket.requestPacketList);
-            System.out.println(" 및 (" + userNick + ")로 로그인 완료");
-
         } catch (IOException e) {
             System.out.println("startClient try-catch block IOException\n\n\n" + e + "\n\n\n");
             if (socketChannel.isOpen()) { stopClient(); }
@@ -113,7 +110,6 @@ public class Client {
         Scanner sc = new Scanner(System.in);
         String userNick;
         userNick = sc.nextLine();
-
         client.startClient(client, userNick);
 
         String contentsStr;
