@@ -252,16 +252,21 @@ public class Server {
                             SelectionKey key = client.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                             key.interestOps(SelectionKey.OP_READ);                                                 // Key의 작업 유형 변경
                         } else {
-                            String filePath = new String(requestParser.getOptionalInfo(client.packetByteArrayList),StandardCharsets.UTF_8);
+                            byte[] optionalInfo = requestParser.getOptionalInfo(client.packetByteArrayList);
+                            String filePath = new String(optionalInfo,StandardCharsets.UTF_8);
+                            String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/]";
+                            filePath = filePath.replaceAll(match, "");
+                            System.out.println(filePath);
+
                             byte[] fileContents = requestParser.getContents(client.packetByteArrayList);
                             client.packetByteArrayList.clear();
-
-                            Path path = Paths.get("/home/yw/Desktop/Server/file.txt");
-                            Files.write(path,fileContents);
 
                             String[] filePathArray = filePath.split("/");
                             filePath = filePathArray[filePathArray.length-1];
                             fileList.add(filePath);
+
+                            Path path = Paths.get("/home/yw/Desktop/Server/" + filePath);
+                            Files.write(path,fileContents);
 
                             // 성공 여부 보내기
                             ResponsePacket responsePacket = new ResponsePacket(
