@@ -8,6 +8,9 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -18,6 +21,8 @@ public class Server {
     ServerSocketChannel serverSocketChannel;
     Selector selector;
     Parser requestParser = new RequestParser();
+    List<String> fileList = new CopyOnWriteArrayList<String>();
+
 
     // 연결된 클라이언트를 관리할 컬렉션
     List<Client> connections = new CopyOnWriteArrayList<Client>();
@@ -178,7 +183,7 @@ public class Server {
 
                     Client client = (Client) selectionKey.attachment();                                 // 현재 클라이언트 객체 얻기
 
-                    // functionName 뽑기
+                    // functionName 뽑기, request 내용 packetByteArrayList에 저장
                     byteBuffer.flip();
                     byte[] requestPacketByteArray = byteBuffer.array();
                     client.packetByteArrayList.add(requestPacketByteArray);
@@ -216,12 +221,9 @@ public class Server {
                             }
                         }
                     } else if( functionName.equals("SendText") ) {
-                        // broadcast
                         if(!requestParser.isLast(requestPacketByteArray)) {
                             SelectionKey key = client.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                             key.interestOps(SelectionKey.OP_READ);                                                 // Key의 작업 유형 변경
-                            selector.wakeup();
-                            return;
                         } else {
                             String contentsStr = new String(requestParser.getContents(client.packetByteArrayList), StandardCharsets.UTF_8);
                             String userNickNotice = client.userNick + "> ";
@@ -238,13 +240,70 @@ public class Server {
                                     c.packetByteArrayList = responsePacket.responsePacketList;
                                     SelectionKey key = c.socketChannel.keyFor(selector);
                                     key.interestOps(SelectionKey.OP_WRITE);
-                                    packetByteArrayList.clear();
                                 } else {
                                     SelectionKey key = c.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                                     key.interestOps(SelectionKey.OP_READ);                                          // Key의 작업 유형 변경
+                                    packetByteArrayList.clear();
                                 }
                             }
                         }
+                    } else if ( functionName.equals("SendFile") ){
+                        if(!requestParser.isLast(requestPacketByteArray)) {
+                            SelectionKey key = client.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
+                            key.interestOps(SelectionKey.OP_READ);                                                 // Key의 작업 유형 변경
+                        } else {
+                            String filePath = new String(requestParser.getOptionalInfo(client.packetByteArrayList),StandardCharsets.UTF_8);
+                            byte[] fileContents = requestParser.getContents(client.packetByteArrayList);
+                            client.packetByteArrayList.clear();
+
+                            Path path = Paths.get("/home/yw/Desktop/Server/file.txt");
+                            Files.write(path,fileContents);
+
+                            String[] filePathArray = filePath.split("/");
+                            filePath = filePathArray[filePathArray.length-1];
+                            fileList.add(filePath);
+
+                            // 성공 여부 보내기
+                            ResponsePacket responsePacket = new ResponsePacket(
+                                    (byte) 20,
+                                    (byte) 4,
+                                    "Server> 파일 전송이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
+                                    "".getBytes(StandardCharsets.UTF_8)
+                            );
+                            client.packetByteArrayList = responsePacket.responsePacketList;
+                            SelectionKey key = client.socketChannel.keyFor(selector);
+                            key.interestOps(SelectionKey.OP_WRITE);
+                        }
+                    }
+                    else if( functionName.equals("ShowFileList") ) {
+                        if ( fileList.isEmpty() ){
+                            ResponsePacket responsePacket = new ResponsePacket(
+                                    (byte) 20,
+                                    (byte) 4,
+                                    "file이 없습니다".getBytes(StandardCharsets.UTF_8),
+                                    "".getBytes(StandardCharsets.UTF_8)
+                            );
+                            client.packetByteArrayList = responsePacket.responsePacketList;
+                            SelectionKey key = client.socketChannel.keyFor(selector);
+                            key.interestOps(SelectionKey.OP_WRITE);
+                        } else {
+                            String fileName = "";
+                            for (String s : fileList) {
+                                s += "\n";
+                                fileName += s;
+                            }
+                            ResponsePacket responsePacket = new ResponsePacket(
+                                    (byte) 20,
+                                    (byte) 4,
+                                    fileName.getBytes(StandardCharsets.UTF_8),
+                                    "".getBytes(StandardCharsets.UTF_8)
+                            );
+                            client.packetByteArrayList = responsePacket.responsePacketList;
+                            SelectionKey key = client.socketChannel.keyFor(selector);
+                            key.interestOps(SelectionKey.OP_WRITE);
+                        }
+                    } else if( functionName.equals("DownloadFile") ) {
+
                     } else {}
                     selector.wakeup();
                 } catch (IOException e) {

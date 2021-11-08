@@ -3,11 +3,13 @@ package client;
 import packet.RequestPacket;
 import parser.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -104,7 +106,7 @@ public class Client {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Client client = new Client();
         System.out.print("userNick을 입력하세요 > ");
         Scanner sc = new Scanner(System.in);
@@ -115,12 +117,47 @@ public class Client {
         String contentsStr;
         while(true) {
             contentsStr = sc.nextLine();
-            RequestPacket requestPacket = new RequestPacket(
-                    "SendText",
-                    contentsStr.getBytes(StandardCharsets.UTF_8),
-                    "1".getBytes(StandardCharsets.UTF_8)
-            );
-            client.send(requestPacket.requestPacketList);
+
+            if ( contentsStr.equals("SendFile") ) {
+                System.out.print("업로드할 파일 경로를 입력하세요 > ");
+                String filePath;
+                filePath = sc.nextLine();
+
+                File file = new File(filePath);
+                byte[] fileContent = Files.readAllBytes(file.toPath());
+
+                RequestPacket requestPacket = new RequestPacket(
+                        "SendFile",
+                        fileContent,
+                        filePath.getBytes(StandardCharsets.UTF_8)
+                );
+                client.send(requestPacket.requestPacketList);
+            } else if ( contentsStr.equals("ShowFileList") ) {
+                RequestPacket requestPacket = new RequestPacket(
+                        "ShowFileList",
+                        "Temp".getBytes(StandardCharsets.UTF_8),
+                        "".getBytes(StandardCharsets.UTF_8)
+                );
+                client.send(requestPacket.requestPacketList);
+            } else if ( contentsStr.equals("DownloadFile") ) {
+                System.out.print("다운로드할 파일 이름을 입력하세요 > ");
+                String fileName;
+                fileName = sc.nextLine();
+
+                RequestPacket requestPacket = new RequestPacket(
+                        "DownloadFile",
+                        fileName.getBytes(StandardCharsets.UTF_8),
+                        "".getBytes(StandardCharsets.UTF_8)
+                );
+                client.send(requestPacket.requestPacketList);
+            } else {
+                RequestPacket requestPacket = new RequestPacket(
+                        "SendText",
+                        contentsStr.getBytes(StandardCharsets.UTF_8),
+                        "".getBytes(StandardCharsets.UTF_8)
+                );
+                client.send(requestPacket.requestPacketList);
+            }
         }
     }
 
