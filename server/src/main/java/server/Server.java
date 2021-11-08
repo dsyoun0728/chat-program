@@ -1,8 +1,10 @@
 package server;
 
+import packet.RequestPacket;
 import parser.*;
 import packet.ResponsePacket;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -201,7 +203,7 @@ public class Server {
                             if (!c.equals(client)) {
                                 ResponsePacket responsePacket = new ResponsePacket(
                                         (byte) 20,
-                                        (byte) 4,
+                                        (byte) 0,
                                         ("Server> " + client.userNick + "님이 입장하셨습니다").getBytes(StandardCharsets.UTF_8),
                                         "1".getBytes(StandardCharsets.UTF_8)
                                 );
@@ -211,7 +213,7 @@ public class Server {
                             } else {
                                 ResponsePacket responsePacket = new ResponsePacket(
                                         (byte) 20,
-                                        (byte) 4,
+                                        (byte) 0,
                                         ("Server> " + client.userNick + "(으)로 로그인 완료").getBytes(StandardCharsets.UTF_8),
                                         "1".getBytes(StandardCharsets.UTF_8)
                                 );
@@ -256,7 +258,6 @@ public class Server {
                             String filePath = new String(optionalInfo,StandardCharsets.UTF_8);
                             String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/]";
                             filePath = filePath.replaceAll(match, "");
-                            System.out.println(filePath);
 
                             byte[] fileContents = requestParser.getContents(client.packetByteArrayList);
                             client.packetByteArrayList.clear();
@@ -271,7 +272,7 @@ public class Server {
                             // 성공 여부 보내기
                             ResponsePacket responsePacket = new ResponsePacket(
                                     (byte) 20,
-                                    (byte) 4,
+                                    (byte) 6,
                                     "Server> 파일 전송이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
                                     "".getBytes(StandardCharsets.UTF_8)
                             );
@@ -284,7 +285,7 @@ public class Server {
                         if ( fileList.isEmpty() ){
                             ResponsePacket responsePacket = new ResponsePacket(
                                     (byte) 20,
-                                    (byte) 4,
+                                    (byte) 16,
                                     "file이 없습니다".getBytes(StandardCharsets.UTF_8),
                                     "".getBytes(StandardCharsets.UTF_8)
                             );
@@ -299,7 +300,7 @@ public class Server {
                             }
                             ResponsePacket responsePacket = new ResponsePacket(
                                     (byte) 20,
-                                    (byte) 4,
+                                    (byte) 16,
                                     fileName.getBytes(StandardCharsets.UTF_8),
                                     "".getBytes(StandardCharsets.UTF_8)
                             );
@@ -308,8 +309,34 @@ public class Server {
                             key.interestOps(SelectionKey.OP_WRITE);
                         }
                     } else if( functionName.equals("DownloadFile") ) {
+                        /*if ( fileList.isEmpty() ){
+                            ResponsePacket responsePacket = new ResponsePacket(
+                                    (byte) 20,
+                                    (byte) 17,
+                                    "file이 없습니다".getBytes(StandardCharsets.UTF_8),
+                                    "".getBytes(StandardCharsets.UTF_8)
+                            );
+                            client.packetByteArrayList = responsePacket.responsePacketList;
+                        } else {*/
+                            String filePath = new String(requestParser.getContents(client.packetByteArrayList), StandardCharsets.UTF_8);
+                            filePath = "/home/yw/Desktop/Server/" + filePath;
 
-                    } else {}
+                            File file = new File(filePath);
+                            byte[] fileContent = Files.readAllBytes(file.toPath());
+
+                            ResponsePacket responsePacket = new ResponsePacket(
+                                    (byte) 20,
+                                    (byte) 17,
+                                    fileContent,
+                                    filePath.getBytes(StandardCharsets.UTF_8)
+                            );
+                            client.packetByteArrayList = responsePacket.responsePacketList;
+                        //}
+                        SelectionKey key = client.socketChannel.keyFor(selector);
+                        key.interestOps(SelectionKey.OP_WRITE);
+                    } else {
+                        System.out.println("functionName이 잘못됐습니다");
+                    }
                     selector.wakeup();
                 } catch (IOException e) {
                     System.out.println("server receive IOException\n\n\n");

@@ -1,15 +1,19 @@
 package client;
 
 import packet.RequestPacket;
+import packet.ResponsePacket;
 import parser.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -71,11 +75,29 @@ public class Client {
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
                     packetByteArrayList.add(responsePacketByteArray);
+                    String functionName = responseParser.getFunctionName(packetByteArrayList);
 
-                    if(responseParser.isLast(responsePacketByteArray)) {
-                        String contentsStr = new String(responseParser.getContents(packetByteArrayList),StandardCharsets.UTF_8);
-                        System.out.println(contentsStr);
-                        packetByteArrayList.clear();
+                    if (responseParser.isLast(responsePacketByteArray)) {
+                        if (functionName.equals("DownloadFile")) {
+                            byte[] optionalInfo = responseParser.getOptionalInfo(packetByteArrayList);
+                            String filePath = new String(optionalInfo, StandardCharsets.UTF_8);
+                            String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/]";
+                            filePath = filePath.replaceAll(match, "");
+
+                            byte[] fileContents = responseParser.getContents(packetByteArrayList);
+                            packetByteArrayList.clear();
+
+                            String[] filePathArray = filePath.split("/");
+                            filePath = filePathArray[filePathArray.length - 1];
+
+                            Path path = Paths.get("/home/yw/Desktop/Client/" + filePath);
+                            Files.write(path, fileContents);
+                            System.out.println("File Download 완료");
+                        } else {
+                            String contentsStr = new String(responseParser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
+                            System.out.println(contentsStr);
+                            packetByteArrayList.clear();
+                        }
                     }
                 } catch (Exception e) {
                     System.out.println("서버 통신 안됨");
@@ -119,7 +141,7 @@ public class Client {
             contentsStr = sc.nextLine();
 
             if ( contentsStr.equals("SendFile") ) {
-                System.out.print("업로드할 파일 경로를 입력하세요 > ");
+                System.out.print("업로드 할 파일 경로를 입력하세요 > ");
                 String filePath;
                 filePath = sc.nextLine();
 
@@ -140,7 +162,7 @@ public class Client {
                 );
                 client.send(requestPacket.requestPacketList);
             } else if ( contentsStr.equals("DownloadFile") ) {
-                System.out.print("다운로드할 파일 이름을 입력하세요 > ");
+                System.out.print("다운로드 할 파일 이름을 입력하세요 > ");
                 String fileName;
                 fileName = sc.nextLine();
 
