@@ -39,6 +39,10 @@ public class RequestPacket extends ProtocolPacket {
         System.arraycopy(this.optionalInfo, 38 * currentPacketNum, requestPacketByteArray, destPos, 38);
         destPos += 38;
 
+        System.out.println("contentsLength: "+this.contentsLength);
+        System.out.println("totalPacketNum: "+this.totalPacketNum);
+        System.out.println("thiscontentsLength: "+thisContentsLength);
+        System.out.println("currentPacketNum: "+currentPacketNum);
         return requestPacketByteArray;
     }
 

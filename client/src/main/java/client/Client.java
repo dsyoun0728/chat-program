@@ -148,6 +148,11 @@ public class Client {
                 File file = new File(filePath);
                 byte[] fileContent = Files.readAllBytes(file.toPath());
 
+                System.out.println(fileContent.length);
+
+                String[] filePathArray = filePath.split("/");
+                filePath = filePathArray[filePathArray.length-1];
+
                 RequestPacket requestPacket = new RequestPacket(
                         "SendFile",
                         fileContent,
@@ -176,7 +181,7 @@ public class Client {
                 RequestPacket requestPacket = new RequestPacket(
                         "SendText",
                         contentsStr.getBytes(StandardCharsets.UTF_8),
-                        "".getBytes(StandardCharsets.UTF_8)
+                        "1".getBytes(StandardCharsets.UTF_8)
                 );
                 client.send(requestPacket.requestPacketList);
             }
