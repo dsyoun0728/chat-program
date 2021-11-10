@@ -190,7 +190,6 @@ public class Server {
                     byte[] requestPacketByteArray = byteBuffer.array();
                     client.packetByteArrayList.add(requestPacketByteArray);
                     String functionName = requestParser.getFunctionName(client.packetByteArrayList);
-
                     if( functionName.equals("Login") ) {
                         client.userNick = new String(requestParser.getContents(client.packetByteArrayList), StandardCharsets.UTF_8);
                         client.packetByteArrayList.clear();
@@ -254,7 +253,6 @@ public class Server {
                             SelectionKey key = client.socketChannel.keyFor(selector);                            // Client의 통신 채널로부터 SelectionKey 얻기
                             key.interestOps(SelectionKey.OP_READ);                                                 // Key의 작업 유형 변경
                         } else {
-                            System.out.println("ㅇㅋㅇㅋ");
                             byte[] optionalInfo = requestParser.getOptionalInfo(client.packetByteArrayList);
                             String filePath = new String(optionalInfo,StandardCharsets.UTF_8);
                             String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/_.]";
@@ -266,18 +264,17 @@ public class Server {
 
                             Path path = Paths.get( "../" + filePath);
 
-                            System.out.println("타긴 타는거냐");
-
+                            System.out.println("Server 로컬에 쓰기 작업 중");
                             Files.write(path, fileContents);
 
+                            System.out.println("완료");
                             client.packetByteArrayList.clear();
 
-                            System.out.println("타긴 타는거냐");
                             // 성공 여부 보내기
                             ResponsePacket responsePacket = new ResponsePacket(
                                     (byte) 20,
                                     (byte) 6,
-                                    "Server> 파일 전송이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
+                                    "Server> 파일 수신이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
                                     "".getBytes(StandardCharsets.UTF_8)
                             );
                             client.packetByteArrayList = responsePacket.responsePacketList;
@@ -313,29 +310,19 @@ public class Server {
                             key.interestOps(SelectionKey.OP_WRITE);
                         }
                     } else if( functionName.equals("DownloadFile") ) {
-                        /*if ( fileList.isEmpty() ){
-                            ResponsePacket responsePacket = new ResponsePacket(
-                                    (byte) 20,
-                                    (byte) 17,
-                                    "file이 없습니다".getBytes(StandardCharsets.UTF_8),
-                                    "".getBytes(StandardCharsets.UTF_8)
-                            );
-                            client.packetByteArrayList = responsePacket.responsePacketList;
-                        } else {*/
-                            String filePath = new String(requestParser.getContents(client.packetByteArrayList), StandardCharsets.UTF_8);
-                            filePath = "/home/yw/Desktop/Server/" + filePath;
+                        String fileName = new String(requestParser.getContents(client.packetByteArrayList), StandardCharsets.UTF_8);
+                        String filePath = "/home/yw/Desktop/workspace/" + fileName;
 
-                            File file = new File(filePath);
-                            byte[] fileContent = Files.readAllBytes(file.toPath());
+                        File file = new File(filePath);
+                        byte[] fileContent = Files.readAllBytes(file.toPath());
 
-                            ResponsePacket responsePacket = new ResponsePacket(
-                                    (byte) 20,
-                                    (byte) 17,
-                                    fileContent,
-                                    filePath.getBytes(StandardCharsets.UTF_8)
-                            );
-                            client.packetByteArrayList = responsePacket.responsePacketList;
-                        //}
+                        ResponsePacket responsePacket = new ResponsePacket(
+                                (byte) 20,
+                                (byte) 17,
+                                fileContent,
+                                fileName.getBytes(StandardCharsets.UTF_8)
+                        );
+                        client.packetByteArrayList = responsePacket.responsePacketList;
                         SelectionKey key = client.socketChannel.keyFor(selector);
                         key.interestOps(SelectionKey.OP_WRITE);
                     } else {
@@ -385,6 +372,10 @@ public class Server {
             Client client = (Client) selectionKey.attachment();
             Runnable writeRunnable = () -> {
                 try {
+                    String fn = requestParser.getFunctionName(client.packetByteArrayList);
+                    if (fn.equals("DownloadFile")) {
+                        System.out.println("파일을 클라이언트에 전송 중입니다....");
+                    }
                     for (byte[] byteArray : client.packetByteArrayList) {
                         ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
                         socketChannel.write(byteBuffer);
@@ -392,6 +383,9 @@ public class Server {
                     client.packetByteArrayList.clear();
                     selectionKey.interestOps(SelectionKey.OP_READ);                                     // 작업 유형을 읽기 작업 유형으로 변경
                     selector.wakeup();
+                    if (fn.equals("DownloadFile")) {
+                        System.out.println("클라이언트가 처리 중입니다....");
+                    }
                 } catch (IOException e) {
                     System.out.println("server send IOException\n\n\n");
                     e.printStackTrace();

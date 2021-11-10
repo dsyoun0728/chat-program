@@ -24,13 +24,14 @@ public class Client {
     SocketChannel socketChannel;
     ArrayList<byte[]> packetByteArrayList = new ArrayList<byte[]>();
     Parser responseParser = new ResponseParser();
+    static String fileName;
 
     void startClient(Client client, String userNick) {
         try {
             executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
-            socketChannel.connect(new InetSocketAddress(5001));
+            socketChannel.connect(new InetSocketAddress("127.0.1.1",5001));
             System.out.println("서버 연결 완료");
             RequestPacket loginPacket = new RequestPacket(
                     "Login",
@@ -72,25 +73,19 @@ public class Client {
                         throw new IOException();
                     }
 
+                    System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
+
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
                     packetByteArrayList.add(responsePacketByteArray);
                     String functionName = responseParser.getFunctionName(packetByteArrayList);
-
                     if (responseParser.isLast(responsePacketByteArray)) {
                         if (functionName.equals("DownloadFile")) {
-                            byte[] optionalInfo = responseParser.getOptionalInfo(packetByteArrayList);
-                            String filePath = new String(optionalInfo, StandardCharsets.UTF_8);
-                            String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/]";
-                            filePath = filePath.replaceAll(match, "");
-
                             byte[] fileContents = responseParser.getContents(packetByteArrayList);
                             packetByteArrayList.clear();
 
-                            String[] filePathArray = filePath.split("/");
-                            filePath = filePathArray[filePathArray.length - 1];
-
-                            Path path = Paths.get("/home/yw/Desktop/Client/" + filePath);
+                            Path path = Paths.get("../" + Client.fileName +"_download");
+                            System.out.println("로컬에 쓰기 작업 중");
                             Files.write(path, fileContents);
                             System.out.println("File Download 완료");
                         } else {
@@ -112,9 +107,16 @@ public class Client {
     private void send(ArrayList<byte[]> byteArrayList) {
         Runnable writeRunnable = () -> {
             try {
+                String fn = responseParser.getFunctionName(byteArrayList);
+                if (fn.equals("SendFile")) {
+                    System.out.println("파일을 서버에 전송 중입니다....");
+                }
                 for (byte[] byteArray : byteArrayList) {
                     ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
                     socketChannel.write(byteBuffer);
+                }
+                if (fn.equals("SendFile")) {
+                    System.out.println("서버가 처리 중입니다....");
                 }
             } catch (IOException e) {
                 System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
@@ -148,8 +150,6 @@ public class Client {
                 File file = new File(filePath);
                 byte[] fileContent = Files.readAllBytes(file.toPath());
 
-                System.out.println(fileContent.length);
-
                 String[] filePathArray = filePath.split("/");
                 filePath = filePathArray[filePathArray.length-1];
 
@@ -168,12 +168,11 @@ public class Client {
                 client.send(requestPacket.requestPacketList);
             } else if ( contentsStr.equals("DownloadFile") ) {
                 System.out.print("다운로드 할 파일 이름을 입력하세요 > ");
-                String fileName;
-                fileName = sc.nextLine();
+                Client.fileName = sc.nextLine();
 
                 RequestPacket requestPacket = new RequestPacket(
                         "DownloadFile",
-                        fileName.getBytes(StandardCharsets.UTF_8),
+                        Client.fileName.getBytes(StandardCharsets.UTF_8),
                         "".getBytes(StandardCharsets.UTF_8)
                 );
                 client.send(requestPacket.requestPacketList);
