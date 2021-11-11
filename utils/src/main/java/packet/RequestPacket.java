@@ -39,6 +39,7 @@ public class RequestPacket extends ProtocolPacket {
         System.arraycopy(this.optionalInfo, 38 * currentPacketNum, requestPacketByteArray, destPos, 38);
         destPos += 38;
 
+        //System.out.println("파일 보내는 중( "+ currentPacketNum +"/"+  this.totalPacketNum +" )");
         return requestPacketByteArray;
     }
 

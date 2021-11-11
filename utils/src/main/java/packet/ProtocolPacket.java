@@ -15,7 +15,7 @@ public abstract class ProtocolPacket {
         this.contents = contents;
         this.totalPacketNum = (int) Math.ceil((double) this.contentsLength / 80);
         this.totalPacketNumByteArray = intToByteArray(totalPacketNum);
-        this.optionalInfo = new byte[totalPacketNum * 38];
+        this.optionalInfo = this.totalPacketNum == 0 ? new byte[38] : new byte[totalPacketNum * 38];
     }
 
     abstract byte[] makePacketByteArray(int currentPacketNum);
