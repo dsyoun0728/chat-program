@@ -29,19 +29,19 @@ public class SendFileWorker implements Worker {
             Server.setFileList(true, filePath);
 
             Path path = Paths.get("../../../../../../../chat-program-data/" + filePath);
+            System.out.println("Server 로컬에 쓰기 작업 중");
             Files.write(path, fileBytes);
+            System.out.println("완료");
         } catch (IOException e) {
             System.out.println("SendFileWorker IOException\n\n\n");
             e.printStackTrace();
             Worker.handleClientOut(this.client);
         }
 
-        this.client.clearRequestPacketList();
-
         ResponsePacket responsePacket = new ResponsePacket(
                 (byte) 20,
                 (byte) 6,
-                "Server> 파일 전송이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
+                "Server> 파일 수신이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
                 "".getBytes(StandardCharsets.UTF_8)
         );
         this.client.setResponsePacketList(responsePacket.responsePacketList);

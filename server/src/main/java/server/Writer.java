@@ -30,6 +30,7 @@ public class Writer {
                 Server.getCallback().failed(e, null);
                 e.printStackTrace();
             }
+            this.client.clearRequestPacketList();
             this.client.clearResponsePacketList();
             this.client.getSelectionKey().interestOps(SelectionKey.OP_READ);
             Server.getCallback().completed(null, null);

@@ -24,7 +24,6 @@ public class LoginWorker implements Worker{
             e.printStackTrace();
             Worker.handleClientOut(this.client);
         }
-        this.client.clearRequestPacketList();
 
         // Server에 출력
         System.out.println(this.client.getUserNick() + "\t입장");

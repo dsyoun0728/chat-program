@@ -25,7 +25,6 @@ public class SendTextWorker implements Worker{
             e.printStackTrace();
             Worker.handleClientOut(this.client);
         }
-        this.client.clearRequestPacketList();
 
         System.out.println(contentsStr);
 
