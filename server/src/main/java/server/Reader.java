@@ -1,6 +1,6 @@
 package server;
 
-import server.Worker.*;
+import server.worker.*;
 
 public class Reader {
     private Client client;

@@ -1,4 +1,4 @@
-package server.Worker;
+package server.worker;
 
 import packet.ResponsePacket;
 import server.Client;

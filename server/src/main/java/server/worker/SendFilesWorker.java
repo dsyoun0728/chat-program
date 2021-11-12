@@ -1,17 +1,17 @@
-package server.Worker;
+package server.worker;
 
 import server.Client;
 
-public class DeleteFileWorker implements Worker {
+public class SendFilesWorker implements Worker {
     private Client client;
 
-    public DeleteFileWorker(Client client) {
+    public SendFilesWorker(Client client) {
         this.client = client;
     }
 
     @Override
     public void doWork() {
-        System.out.println("DeleteFileWorker");
+        System.out.println("SendFilesWorker");
         System.out.println(client);
     }
 }
