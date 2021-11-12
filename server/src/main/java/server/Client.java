@@ -59,6 +59,7 @@ public class Client {
 
               if (!requestParser.isLast(requestPacket)) {
                   this.selectionKey.interestOps(SelectionKey.OP_READ);
+                  Server.getCallback().completed(null, null);
               } else {
                   Reader reader = new Reader(this);
                   reader.deployWorker(this.requestParser.getFunctionName(this.requestPacketList));
