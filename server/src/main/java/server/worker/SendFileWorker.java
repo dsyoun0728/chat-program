@@ -28,7 +28,7 @@ public class SendFileWorker implements Worker {
             filePath = filePath.replaceAll(match, "");
             Server.setFileList(true, filePath);
 
-            Path path = Paths.get("../../../../../../../chat-program-data/" + filePath);
+            Path path = Paths.get("../chat-program-data/" + filePath);
             System.out.println("Server 로컬에 쓰기 작업 중");
             Files.write(path, fileBytes);
             System.out.println("완료");
