@@ -1,6 +1,6 @@
 package server;
 
-import server.Worker.Worker;
+import server.worker.Worker;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
