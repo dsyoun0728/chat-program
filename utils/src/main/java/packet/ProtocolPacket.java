@@ -13,9 +13,10 @@ public abstract class ProtocolPacket {
         this.functionNum = functionNum;
         this.contentsLength = contents.length;
         this.contents = contents;
-        this.totalPacketNum = (int) Math.ceil((double) this.contentsLength / 80);
-        this.totalPacketNumByteArray = intToByteArray(totalPacketNum);
-        this.optionalInfo = this.totalPacketNum == 0 ? new byte[38] : new byte[totalPacketNum * 38];
+        int tempPacketNum = (int) Math.ceil((double) this.contentsLength / 80);
+        this.totalPacketNum = tempPacketNum == 0 ? 1 : tempPacketNum;
+        this.totalPacketNumByteArray = intToByteArray(this.totalPacketNum);
+        this.optionalInfo = new byte[this.totalPacketNum * 38];
     }
 
     abstract byte[] makePacketByteArray(int currentPacketNum);
