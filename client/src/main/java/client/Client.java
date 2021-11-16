@@ -31,7 +31,7 @@ public class Client {
             executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
-            socketChannel.connect(new InetSocketAddress("127.0.1.1",5001));
+            socketChannel.connect(new InetSocketAddress("192.168.14.51", 5001));
             System.out.println("서버 연결 완료");
             RequestPacket loginPacket = new RequestPacket(
                     "Login",

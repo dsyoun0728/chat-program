@@ -52,7 +52,7 @@ public class Server {
         try {
             serverSocketChannel = ServerSocketChannel.open();
             // 서비스 포트 설정 및 논블로킹 모드로 설정
-            serverSocketChannel.bind(new InetSocketAddress(5001));
+            serverSocketChannel.bind(new InetSocketAddress("192.168.14.51",5001));
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
