@@ -67,13 +67,19 @@ public class Client {
                 try {
                     ByteBuffer byteBuffer = ByteBuffer.allocate(120);
 
-                    int readByteCount = socketChannel.read(byteBuffer);
+                    int byteCount = socketChannel.read(byteBuffer);
+                    System.out.println(byteCount);
 
-                    if (readByteCount == -1) {
+                    if (byteCount == -1) {
                         throw new IOException();
                     }
 
-                    System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
+                    while ( 0 < byteCount && byteCount < 120 ){
+                        byteCount += socketChannel.read(byteBuffer);
+                    }
+                    System.out.println(byteCount);
+
+                    //System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
 
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
@@ -111,9 +117,12 @@ public class Client {
                 if (fn.equals("SendFile")) {
                     System.out.println("파일을 서버에 전송 중입니다....");
                 }
+                int sendCount = 0;
                 for (byte[] byteArray : byteArrayList) {
                     ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
-                    socketChannel.write(byteBuffer);
+                    while (sendCount < 120) {
+                        sendCount += socketChannel.write(byteBuffer);
+                    }
                 }
                 if (fn.equals("SendFile")) {
                     System.out.println("서버가 처리 중입니다....");

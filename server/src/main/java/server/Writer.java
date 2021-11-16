@@ -17,8 +17,11 @@ public class Writer {
         Runnable runnable = () -> {
             try {
                 for (byte[] packet : this.client.getResponsePacketList()) {
+                    int byteCount = 0;
                     ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-                    this.client.getSocketChannel().write(byteBuffer);
+                    while (byteCount < 120) {
+                        byteCount += this.client.getSocketChannel().write(byteBuffer);
+                    }
                 }
             } catch (IOException e) {
                 System.out.println("Writer IOException\t\t\t");

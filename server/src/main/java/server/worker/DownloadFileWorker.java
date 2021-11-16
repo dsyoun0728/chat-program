@@ -20,7 +20,7 @@ public class DownloadFileWorker implements Worker {
     @Override
     public void doWork() {
         ResponsePacket responsePacket;
-        String filePath = "../../../../../../../chat-program-data/";
+        String filePath = "../chat-program-data/";
         if (Server.getFileList().isEmpty()) {
             responsePacket = new ResponsePacket(
                     (byte) 20,
