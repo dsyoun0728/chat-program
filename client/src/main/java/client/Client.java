@@ -26,12 +26,13 @@ public class Client {
     Parser responseParser = new ResponseParser();
     static String fileName;
 
-    void startClient(Client client, String userNick) {
+    void startClient(Client client, String ipAndport, String userNick) {
         try {
             executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
-            socketChannel.connect(new InetSocketAddress("192.168.14.51", 5001));
+            String[] ipAndportArray = ipAndport.split(":");
+            socketChannel.connect(new InetSocketAddress( ipAndportArray[0], Integer.parseInt(ipAndportArray[1])));
             System.out.println("서버 연결 완료");
             RequestPacket loginPacket = new RequestPacket(
                     "Login",
@@ -68,7 +69,7 @@ public class Client {
                     ByteBuffer byteBuffer = ByteBuffer.allocate(120);
 
                     int byteCount = socketChannel.read(byteBuffer);
-                    System.out.println(byteCount);
+                    //System.out.println(byteCount);
 
                     if (byteCount == -1) {
                         throw new IOException();
@@ -77,7 +78,7 @@ public class Client {
                     while ( 0 < byteCount && byteCount < 120 ){
                         byteCount += socketChannel.read(byteBuffer);
                     }
-                    System.out.println(byteCount);
+                    //System.out.println(byteCount);
 
                     //System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
 
@@ -141,11 +142,16 @@ public class Client {
 
     public static void main(String[] args) throws IOException {
         Client client = new Client();
-        System.out.print("userNick을 입력하세요 > ");
         Scanner sc = new Scanner(System.in);
+
+        System.out.println("안녕하세요. 로그인 후 다른 기능들을 이용 가능합니다.");
+        System.out.printf("접속 서버 IP 주소와 Port를 입력하세요(ex. 192.168.14.51:5001 ) > ");
+        String ipAndport = sc.nextLine();
+
+        System.out.print("userNick을 입력하세요 > ");
         String userNick;
         userNick = sc.nextLine();
-        client.startClient(client, userNick);
+        client.startClient(client, ipAndport, userNick);
 
         String contentsStr;
         while(true) {
