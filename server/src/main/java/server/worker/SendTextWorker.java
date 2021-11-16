@@ -26,8 +26,6 @@ public class SendTextWorker implements Worker{
             Worker.handleClientOut(this.client);
         }
 
-        System.out.println(contentsStr);
-
         for (Client c : Server.getClientList()) {
             if (!c.equals(this.client)) {
                 ResponsePacket responsePacket = new ResponsePacket(
@@ -38,17 +36,7 @@ public class SendTextWorker implements Worker{
                 );
                 c.setResponsePacketList(responsePacket.responsePacketList);
             } else {
-                try {
-                    ResponsePacket responsePacket = new ResponsePacket(
-                            (byte) 20,
-                            (byte) 4,
-                            "".getBytes(StandardCharsets.UTF_8),
-                            this.client.getUserNick().getBytes(StandardCharsets.UTF_8)
-                    );
-                    this.client.setResponsePacketList(responsePacket.responsePacketList);
-                }catch (Exception e){
-                    System.out.println(e.getMessage());
-                }
+                c.getSelectionKey().interestOps(SelectionKey.OP_READ);
             }
             c.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
         }

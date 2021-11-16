@@ -48,9 +48,12 @@ public class Client {
 
               int byteCount = this.socketChannel.read(byteBuffer);
 
+
               //상대방이 SocketChannel의 close() 메소드를 호출할 경우
               if (byteCount == -1) {
-                  throw new IOException("클라이언트 연결 정상적으로 끊김" + socketChannel.getRemoteAddress());
+                  System.out.println("클라이언트 연결 정상적으로 끊김" + socketChannel.getRemoteAddress());
+                  Server.setClientList(false,this);
+                  return;
               }
 
               while ( 0 < byteCount && byteCount < 120 ){
