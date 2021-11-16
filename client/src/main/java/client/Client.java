@@ -118,8 +118,8 @@ public class Client {
                 if (fn.equals("SendFile")) {
                     System.out.println("파일을 서버에 전송 중입니다....");
                 }
-                int sendCount = 0;
                 for (byte[] byteArray : byteArrayList) {
+                    int sendCount = 0;
                     ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
                     while (sendCount < 120) {
                         sendCount += socketChannel.write(byteBuffer);
