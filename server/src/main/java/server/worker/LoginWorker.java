@@ -1,29 +1,28 @@
 package server.worker;
 
 import packet.ResponsePacket;
+import parser.ParsedMsg;
 import server.Client;
 import server.Server;
+import util.Constants;
 
-import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class LoginWorker implements Worker{
     private Client client;
+    private UUID uuid;
 
-    public LoginWorker(Client client) {
+    public LoginWorker(Client client, UUID uuid) {
         this.client = client;
+        this.uuid = uuid;
     }
 
     @Override
     public void doWork() {
-        try {
-            this.client.setUserNick(new String(this.client.getRequestParser().getContents(this.client.getRequestPacketList()), StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            System.out.println("LoginWorker IOException\n\n\n");
-            e.printStackTrace();
-            Worker.handleClientOut(this.client);
-        }
+        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
+        this.client.setUserNick(new String(parsedMsg.getContents(), StandardCharsets.UTF_8));
 
         // Server에 출력
         System.out.println(this.client.getUserNick() + "\t입장");
@@ -31,20 +30,22 @@ public class LoginWorker implements Worker{
         for (Client c : Server.getClientList()) {
             if (!c.equals(this.client)) {
                 ResponsePacket responsePacket = new ResponsePacket(
-                        (byte) 20,
-                        (byte) 0,
+                        this.uuid,
+                        (byte) Constants.RESPONSE_SUCCESS,
+                        parsedMsg.getFunctionName(),
                         ("Server > " + this.client.getUserNick() + " 님이 입장하였습니다.").getBytes(StandardCharsets.UTF_8),
                         "1".getBytes(StandardCharsets.UTF_8)
                 );
-                c.setResponsePacketList(responsePacket.responsePacketList);
+                c.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
             } else {
                 ResponsePacket responsePacket = new ResponsePacket(
-                        (byte) 20,
-                        (byte) 0,
+                        this.uuid,
+                        (byte) Constants.RESPONSE_SUCCESS,
+                        parsedMsg.getFunctionName(),
                         ("Server > " + this.client.getUserNick() + " (으)로 로그인 완료").getBytes(StandardCharsets.UTF_8),
                         "1".getBytes(StandardCharsets.UTF_8)
                 );
-                this.client.setResponsePacketList(responsePacket.responsePacketList);
+                this.client.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
             }
             c.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
         }

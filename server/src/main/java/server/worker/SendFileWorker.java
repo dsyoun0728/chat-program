@@ -1,8 +1,10 @@
 package server.worker;
 
 import packet.ResponsePacket;
+import parser.ParsedMsg;
 import server.Client;
 import server.Server;
+import util.Constants;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
@@ -10,19 +12,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 public class SendFileWorker implements Worker {
     private Client client;
+    private UUID uuid;
 
-    public SendFileWorker(Client client) {
+    public SendFileWorker(Client client, UUID uuid) {
         this.client = client;
+        this.uuid = uuid;
     }
 
     @Override
     public void doWork() {
+        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         try {
-            byte[] fileBytes = this.client.getRequestParser().getContents(this.client.getRequestPacketList());
-            byte[] optionalInfo = this.client.getRequestParser().getOptionalInfo(this.client.getRequestPacketList());
+            byte[] fileBytes = parsedMsg.getContents();
+            byte[] optionalInfo = parsedMsg.getOptionalInfo();
             String filePath = new String(optionalInfo, StandardCharsets.UTF_8);
             String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/_.]";
             filePath = filePath.replaceAll(match, "");
@@ -35,16 +41,17 @@ public class SendFileWorker implements Worker {
         } catch (IOException e) {
             System.out.println("SendFileWorker IOException\n\n\n");
             e.printStackTrace();
-            Worker.handleClientOut(this.client);
+            Worker.handleClientOut(this.client, this.uuid);
         }
 
         ResponsePacket responsePacket = new ResponsePacket(
-                (byte) 20,
-                (byte) 6,
+                this.uuid,
+                (byte) Constants.RESPONSE_SUCCESS,
+                parsedMsg.getFunctionName(),
                 "Server> 파일 수신이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
                 "".getBytes(StandardCharsets.UTF_8)
         );
-        this.client.setResponsePacketList(responsePacket.responsePacketList);
+        this.client.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
         this.client.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
         Server.getCallback().completed(null, null);
     }

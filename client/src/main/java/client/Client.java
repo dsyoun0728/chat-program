@@ -3,6 +3,7 @@ package client;
 import packet.RequestPacket;
 import packet.ResponsePacket;
 import parser.*;
+import util.Constants;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,12 +27,12 @@ public class Client {
     Parser responseParser = new ResponseParser();
     static String fileName;
 
-    void startClient(Client client, String ipAndport, String userNick) {
+    void startClient(Client client, String ipAndPort, String userNick) {
         try {
             executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
-            String[] ipAndportArray = ipAndport.split(":");
+            String[] ipAndportArray = ipAndPort.split(":");
             socketChannel.connect(new InetSocketAddress( ipAndportArray[0], Integer.parseInt(ipAndportArray[1])));
             System.out.println("서버 연결 완료");
             RequestPacket loginPacket = new RequestPacket(
@@ -66,7 +67,7 @@ public class Client {
         Runnable readRunnable = () -> {
             while (true) {
                 try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(120);
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
 
                     int byteCount = socketChannel.read(byteBuffer);
                     //System.out.println(byteCount);
@@ -75,7 +76,7 @@ public class Client {
                         throw new IOException();
                     }
 
-                    while ( 0 < byteCount && byteCount < 120 ){
+                    while ( 0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE ){
                         byteCount += socketChannel.read(byteBuffer);
                     }
                     //System.out.println(byteCount);
@@ -85,10 +86,10 @@ public class Client {
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
                     packetByteArrayList.add(responsePacketByteArray);
-                    String functionName = responseParser.getFunctionName(packetByteArrayList);
-                    if (responseParser.isLast(responsePacketByteArray)) {
+                    String functionName = Parser.getFunctionName(responsePacketByteArray);
+                    if (Parser.isLast(responsePacketByteArray)) {
                         if (functionName.equals("DownloadFile")) {
-                            byte[] fileContents = responseParser.getContents(packetByteArrayList);
+                            byte[] fileContents = Parser.getContents(packetByteArrayList);
                             packetByteArrayList.clear();
 
                             Path path = Paths.get("../" + Client.fileName +"_download");
@@ -100,7 +101,7 @@ public class Client {
                             stopClient();
                             break;
                         } else {
-                            String contentsStr = new String(responseParser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
+                            String contentsStr = new String(Parser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
                             System.out.println(contentsStr);
                             packetByteArrayList.clear();
                         }
@@ -118,14 +119,14 @@ public class Client {
     private void send(ArrayList<byte[]> byteArrayList) {
         Runnable writeRunnable = () -> {
             try {
-                String fn = responseParser.getFunctionName(byteArrayList);
+                String fn = Parser.getFunctionName(byteArrayList.get(0));
                 if (fn.equals("SendFile")) {
                     System.out.println("파일을 서버에 전송 중입니다....");
                 }
                 for (byte[] byteArray : byteArrayList) {
                     int sendCount = 0;
                     ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
-                    while (sendCount < 120) {
+                    while (sendCount < Constants.PACKET_TOTAL_SIZE) {
                         sendCount += socketChannel.write(byteBuffer);
                     }
                 }
@@ -150,12 +151,12 @@ public class Client {
 
         System.out.println("안녕하세요. 로그인 후 다른 기능들을 이용 가능합니다.");
         System.out.printf("접속 서버 IP 주소와 Port를 입력하세요(ex. 192.168.14.51:5001 ) > ");
-        String ipAndport = sc.nextLine();
+        String ipAndPort = sc.nextLine();
 
         System.out.print("userNick을 입력하세요 > ");
         String userNick;
         userNick = sc.nextLine();
-        client.startClient(client, ipAndport, userNick);
+        client.startClient(client, ipAndPort, userNick);
 
         String contentsStr;
         while(true) {

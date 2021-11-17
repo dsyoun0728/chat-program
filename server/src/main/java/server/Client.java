@@ -1,6 +1,7 @@
 package server;
 
 import parser.*;
+import util.Constants;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -8,14 +9,17 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class Client {
     private SocketChannel socketChannel;
     private SelectionKey selectionKey;
     private Parser requestParser = new RequestParser();
     private String userNick;
-    private ArrayList<byte[]> requestPacketList = new ArrayList<>();
-    private ArrayList<byte[]> responsePacketList = new ArrayList<>();
+    private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new HashMap<>();
+    private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new HashMap<>();
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
         this.socketChannel = socketChannel;
@@ -30,24 +34,27 @@ public class Client {
     public String getUserNick() {
         return this.userNick;
     }
-    public ArrayList<byte[]> getRequestPacketList() {
-        return this.requestPacketList;
+    public Map<UUID, ArrayList<byte[]>> getResponsePacketListMap() { return this.responsePacketListMap; }
+    public ArrayList<byte[]> getRequestPacketList(UUID uuid) {
+        return this.requestPacketListMap.get(uuid);
     }
-    public ArrayList<byte[]> getResponsePacketList() { return this.responsePacketList; }
+    public ArrayList<byte[]> getResponsePacketList(UUID uuid) {
+        return this.responsePacketListMap.get(uuid);
+    }
 
     public void setUserNick(String userNick) { this.userNick = userNick; }
-    public void setResponsePacketList(ArrayList<byte[]> responsePacketList) { this.responsePacketList = responsePacketList; }
+    public void setResponsePacketList(UUID uuid, ArrayList<byte[]> responsePacketList) {
+        this.responsePacketListMap.put(uuid, responsePacketList);
+    }
 
-    public void clearRequestPacketList() { this.requestPacketList.clear(); }
-    public void clearResponsePacketList() { this.responsePacketList.clear(); }
+    public void clearRequestPacketList(UUID uuid) { this.requestPacketListMap.remove(uuid); }
+    public void clearResponsePacketList(UUID uuid) { this.responsePacketListMap.remove(uuid); }
 
     public Runnable makeWholePacket() {
         Runnable runnable = () -> {
           try {
-              ByteBuffer byteBuffer = ByteBuffer.allocate(120);
-
+              ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
               int byteCount = this.socketChannel.read(byteBuffer);
-
 
               //상대방이 SocketChannel의 close() 메소드를 호출할 경우
               if (byteCount == -1) {
@@ -56,21 +63,25 @@ public class Client {
                   return;
               }
 
-              while ( 0 < byteCount && byteCount < 120 ){
+              while ( 0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE){
                   byteCount += this.socketChannel.read(byteBuffer);
               }
 
               // 정상 동작 시작
               byteBuffer.flip();
               byte[] requestPacket = byteBuffer.array();
-              this.requestPacketList.add(requestPacket);
+              UUID uuid = Parser.getUUID(requestPacket);
+              if (!this.requestPacketListMap.containsKey(uuid)) {
+                  this.requestPacketListMap.put(uuid, new ArrayList<>());
+              }
+              this.requestPacketListMap.get(uuid).add(requestPacket);
 
-              if (!requestParser.isLast(requestPacket)) {
+              if (!Parser.isLast(requestPacket)) {
                   this.selectionKey.interestOps(SelectionKey.OP_READ);
                   Server.getCallback().completed(null, null);
               } else {
                   Reader reader = new Reader(this);
-                  reader.deployWorker(this.requestParser.getFunctionName(this.requestPacketList));
+                  reader.deployWorker(uuid);
               }
           } catch (IOException e) {
               System.out.println("server receive IOException\n\n\n");

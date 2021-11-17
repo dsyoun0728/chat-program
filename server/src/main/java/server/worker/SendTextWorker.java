@@ -1,44 +1,45 @@
 package server.worker;
 
 import packet.ResponsePacket;
+import parser.ParsedMsg;
 import server.Client;
 import server.Server;
+import util.Constants;
 
-import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class SendTextWorker implements Worker{
     private Client client;
+    private UUID uuid;
 
-    public SendTextWorker(Client client) {
+    public SendTextWorker(Client client, UUID uuid) {
         this.client = client;
+        this.uuid = uuid;
     }
 
     @Override
     public void doWork() {
+        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         String contentsStr = this.client.getUserNick() + "> ";
-        try {
-            contentsStr += new String(this.client.getRequestParser().getContents(this.client.getRequestPacketList()), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            System.out.println("SendTextWorker IOException\n\n\n");
-            e.printStackTrace();
-            Worker.handleClientOut(this.client);
-        }
+        contentsStr += new String(parsedMsg.getContents(), StandardCharsets.UTF_8);
 
+        UUID uuidForOther = UUID.randomUUID();
         for (Client c : Server.getClientList()) {
             if (!c.equals(this.client)) {
                 ResponsePacket responsePacket = new ResponsePacket(
-                        (byte) 20,
-                        (byte) 4,
+                        uuidForOther,
+                        (byte) Constants.RESPONSE_SUCCESS,
+                        parsedMsg.getFunctionName(),
                         contentsStr.getBytes(StandardCharsets.UTF_8),
                         this.client.getUserNick().getBytes(StandardCharsets.UTF_8)
                 );
-                c.setResponsePacketList(responsePacket.responsePacketList);
+                c.setResponsePacketList(uuidForOther, responsePacket.responsePacketList);
+                c.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
             } else {
                 c.getSelectionKey().interestOps(SelectionKey.OP_READ);
             }
-            c.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
         }
         Server.getCallback().completed(null, null);
     }

@@ -1,14 +1,15 @@
 package packet;
 
-import util.Function;
+import util.*;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class ResponsePacket extends ProtocolPacket {
     public ArrayList<byte[]> responsePacketList = new ArrayList<byte[]>();
 
-    public ResponsePacket(byte responseCode, byte functionNum, byte[] contents, byte[] optionalInfo) {
-        super(functionNum, contents);
+    public ResponsePacket(UUID uuid, byte responseCode, String functionName, byte[] contents, byte[] optionalInfo) {
+        super(uuid, Function.getFunctionNum(functionName), contents);
         System.arraycopy(totalPacketNumByteArray, 0, this.optionalInfo, 0, totalPacketNumByteArray.length);
         this.optionalInfo[totalPacketNumByteArray.length] = responseCode;
         System.arraycopy(optionalInfo, 0, this.optionalInfo, totalPacketNumByteArray.length + 1, optionalInfo.length);
@@ -19,26 +20,36 @@ public class ResponsePacket extends ProtocolPacket {
     @Override
     public byte[] makePacketByteArray(int currentPacketNum) {
         int destPos = 0;
-        boolean lastFlag = this.totalPacketNum -1 == currentPacketNum;
-        byte thisContentsLength = (byte) (lastFlag ? this.contentsLength - 80 * currentPacketNum : 80);
-        byte lastAndLength = (byte) (lastFlag ? (byte)(1 << 7) + thisContentsLength : thisContentsLength);
-        byte[] responsePacketByteArray = new byte[120];
+        boolean isLast = this.totalPacketNum -1 == currentPacketNum;
+        int thisContentsLength = isLast ?
+                this.totalContentsLength - Constants.PACKET_CONTENTS_SIZE * currentPacketNum
+                : Constants.PACKET_CONTENTS_SIZE;
 
-        // 0                    functionNum
-        responsePacketByteArray[destPos] = functionNum;
-        destPos += 1;
+        byte[] responsePacketByteArray= new byte[Constants.PACKET_TOTAL_SIZE];
 
-        // 1                    last flag & contents length
-        responsePacketByteArray[destPos] = lastAndLength;
-        destPos += 1;
+        // 0                    Last Flag
+        responsePacketByteArray[destPos] = (byte) (isLast ? 1 : 0);
+        destPos += Constants.PACKET_LAST_FLAG_SIZE;
 
-        // 2 ~ 81           contents
-        System.arraycopy(contents, 80 * currentPacketNum, responsePacketByteArray, destPos, thisContentsLength);
-        destPos += 80;
+        // 1 ~ 16           UUID
+        System.arraycopy(this.UUIDByteArr, 0, responsePacketByteArray, destPos, Constants.PACKET_UUID_SIZE);
+        destPos += Constants.PACKET_UUID_SIZE;
 
-        // 82 ~ 119       optional information (Total Packet Number + Response Code + etc)
-        System.arraycopy(this.optionalInfo, 38 * currentPacketNum, responsePacketByteArray, destPos, 38);
-        destPos += 38;
+        // 17 ~ 20        Function 정보
+        System.arraycopy(this.function, 0, responsePacketByteArray, destPos, Constants.PACKET_FUNCTION_SIZE);
+        destPos += Constants.PACKET_FUNCTION_SIZE;
+
+        // 21 ~ 24        Contents Length
+        System.arraycopy(this.intToByteArray(thisContentsLength), 0, responsePacketByteArray, destPos, Constants.PACKET_CONTENTS_LENGTH_SIZE);
+        destPos += Constants.PACKET_CONTENTS_LENGTH_SIZE;
+
+        // 25 ~ 424     Contents
+        System.arraycopy(this.contents, Constants.PACKET_CONTENTS_SIZE * currentPacketNum, responsePacketByteArray, destPos, thisContentsLength);
+        destPos += Constants.PACKET_CONTENTS_SIZE;
+
+        // 425 ~ 499   Optional information (Total Packet Number + etc)
+        System.arraycopy(this.optionalInfo, Constants.PACKET_OPTIONAL_INFO_SIZE * currentPacketNum, responsePacketByteArray, destPos, Constants.PACKET_OPTIONAL_INFO_SIZE);
+        destPos += Constants.PACKET_OPTIONAL_INFO_SIZE;
 
         return responsePacketByteArray;
     }
