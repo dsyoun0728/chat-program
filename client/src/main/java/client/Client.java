@@ -26,12 +26,13 @@ public class Client {
     Parser responseParser = new ResponseParser();
     static String fileName;
 
-    void startClient(Client client, String userNick) {
+    void startClient(Client client, String ipAndport, String userNick) {
         try {
             executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(true);
-            socketChannel.connect(new InetSocketAddress("127.0.1.1",5001));
+            String[] ipAndportArray = ipAndport.split(":");
+            socketChannel.connect(new InetSocketAddress( ipAndportArray[0], Integer.parseInt(ipAndportArray[1])));
             System.out.println("서버 연결 완료");
             RequestPacket loginPacket = new RequestPacket(
                     "Login",
@@ -67,13 +68,19 @@ public class Client {
                 try {
                     ByteBuffer byteBuffer = ByteBuffer.allocate(120);
 
-                    int readByteCount = socketChannel.read(byteBuffer);
+                    int byteCount = socketChannel.read(byteBuffer);
+                    //System.out.println(byteCount);
 
-                    if (readByteCount == -1) {
+                    if (byteCount == -1) {
                         throw new IOException();
                     }
 
-                    System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
+                    while ( 0 < byteCount && byteCount < 120 ){
+                        byteCount += socketChannel.read(byteBuffer);
+                    }
+                    //System.out.println(byteCount);
+
+                    //System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
 
                     byteBuffer.flip();
                     byte[] responsePacketByteArray = byteBuffer.array();
@@ -88,6 +95,10 @@ public class Client {
                             System.out.println("로컬에 쓰기 작업 중");
                             Files.write(path, fileContents);
                             System.out.println("File Download 완료");
+                        } else if (functionName.equals("Logout")) {
+                            System.out.println("Logout 되었습니다");
+                            stopClient();
+                            break;
                         } else {
                             String contentsStr = new String(responseParser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
                             System.out.println(contentsStr);
@@ -112,8 +123,11 @@ public class Client {
                     System.out.println("파일을 서버에 전송 중입니다....");
                 }
                 for (byte[] byteArray : byteArrayList) {
+                    int sendCount = 0;
                     ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
-                    socketChannel.write(byteBuffer);
+                    while (sendCount < 120) {
+                        sendCount += socketChannel.write(byteBuffer);
+                    }
                 }
                 if (fn.equals("SendFile")) {
                     System.out.println("서버가 처리 중입니다....");
@@ -132,11 +146,16 @@ public class Client {
 
     public static void main(String[] args) throws IOException {
         Client client = new Client();
-        System.out.print("userNick을 입력하세요 > ");
         Scanner sc = new Scanner(System.in);
+
+        System.out.println("안녕하세요. 로그인 후 다른 기능들을 이용 가능합니다.");
+        System.out.printf("접속 서버 IP 주소와 Port를 입력하세요(ex. 192.168.14.51:5001 ) > ");
+        String ipAndport = sc.nextLine();
+
+        System.out.print("userNick을 입력하세요 > ");
         String userNick;
         userNick = sc.nextLine();
-        client.startClient(client, userNick);
+        client.startClient(client, ipAndport, userNick);
 
         String contentsStr;
         while(true) {
@@ -173,6 +192,13 @@ public class Client {
                 RequestPacket requestPacket = new RequestPacket(
                         "DownloadFile",
                         Client.fileName.getBytes(StandardCharsets.UTF_8),
+                        "".getBytes(StandardCharsets.UTF_8)
+                );
+                client.send(requestPacket.requestPacketList);
+            } else if ( contentsStr.equals("Logout")){
+                RequestPacket requestPacket = new RequestPacket(
+                        "Logout",
+                        "Temp".getBytes(StandardCharsets.UTF_8),
                         "".getBytes(StandardCharsets.UTF_8)
                 );
                 client.send(requestPacket.requestPacketList);
