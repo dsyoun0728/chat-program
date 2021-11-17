@@ -9,17 +9,17 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Client {
     private SocketChannel socketChannel;
     private SelectionKey selectionKey;
     private Parser requestParser = new RequestParser();
     private String userNick;
-    private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new HashMap<>();
-    private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new HashMap<>();
+    private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new ConcurrentHashMap<>();
+    private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new ConcurrentHashMap<>();
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
         this.socketChannel = socketChannel;
