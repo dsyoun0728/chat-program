@@ -95,6 +95,10 @@ public class Client {
                             System.out.println("로컬에 쓰기 작업 중");
                             Files.write(path, fileContents);
                             System.out.println("File Download 완료");
+                        } else if (functionName.equals("Logout")) {
+                            System.out.println("Logout 되었습니다");
+                            stopClient();
+                            break;
                         } else {
                             String contentsStr = new String(responseParser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
                             System.out.println(contentsStr);
@@ -188,6 +192,13 @@ public class Client {
                 RequestPacket requestPacket = new RequestPacket(
                         "DownloadFile",
                         Client.fileName.getBytes(StandardCharsets.UTF_8),
+                        "".getBytes(StandardCharsets.UTF_8)
+                );
+                client.send(requestPacket.requestPacketList);
+            } else if ( contentsStr.equals("Logout")){
+                RequestPacket requestPacket = new RequestPacket(
+                        "Logout",
+                        "Temp".getBytes(StandardCharsets.UTF_8),
                         "".getBytes(StandardCharsets.UTF_8)
                 );
                 client.send(requestPacket.requestPacketList);
