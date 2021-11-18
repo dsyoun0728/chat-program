@@ -89,7 +89,7 @@ public class Client {
                     String functionName = Parser.getFunctionName(responsePacketByteArray);
                     if (Parser.isLast(responsePacketByteArray)) {
                         if (functionName.equals("DownloadFile")) {
-                            byte[] fileContents = Parser.getContents(packetByteArrayList);
+                            byte[] fileContents = responseParser.getContents(packetByteArrayList);
                             packetByteArrayList.clear();
 
                             Path path = Paths.get("../" + Client.fileName +"_download");
@@ -101,7 +101,7 @@ public class Client {
                             stopClient();
                             break;
                         } else {
-                            String contentsStr = new String(Parser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
+                            String contentsStr = new String(responseParser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
                             System.out.println(contentsStr);
                             packetByteArrayList.clear();
                         }
