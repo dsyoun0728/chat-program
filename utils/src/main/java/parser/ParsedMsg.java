@@ -9,16 +9,16 @@ public class ParsedMsg {
     private byte[] contents;
     private byte[] optionalInfo;
     private int totalPacketNumber;
-    private String status;
+    private String responseStatus;
 
-    public ParsedMsg(UUID uuid, String functionName, byte[] contents, byte[] optionalInfo, int totalPacketNumber, String status) {
+    public ParsedMsg(UUID uuid, String functionName, byte[] contents, byte[] optionalInfo, int totalPacketNumber, String responseStatus) {
         this.uuid = uuid;
         this.functionName = functionName;
         this.contentsLength = contents.length;
         this.contents = contents;
         this.optionalInfo = optionalInfo;
         this.totalPacketNumber = totalPacketNumber;
-        this.status = status;
+        this.responseStatus = responseStatus;
     }
 
     public UUID getUuid() {
@@ -45,7 +45,7 @@ public class ParsedMsg {
         return totalPacketNumber;
     }
 
-    public String getStatus() {
-        return status;
+    public String getResponseStatus() {
+        return responseStatus;
     }
 }

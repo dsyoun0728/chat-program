@@ -13,7 +13,7 @@ public class Constants {
 
     public static final int RESPONSE_SUCCESS = 20;
 
-    public static String getStatus(byte b) {
+    public static String getResponseStatus(byte b) {
         return (b == (byte) RESPONSE_SUCCESS) ? "RESPONSE_SUCCESS" : "RESPONSE_FAIL";
     }
 }
