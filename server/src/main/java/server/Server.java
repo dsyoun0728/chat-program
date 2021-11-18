@@ -1,5 +1,6 @@
 package server;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
@@ -54,6 +55,11 @@ public class Server {
             serverSocketChannel.bind(new InetSocketAddress(5001));
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+            File files[] = new File("../chat-program-data").listFiles();
+            for (File file : files) {
+                setFileList(true, file.getName());
+            }
 
             System.out.println("-------------------서버 접속 준비 완료-------------------");
 
