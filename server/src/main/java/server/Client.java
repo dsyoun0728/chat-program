@@ -18,7 +18,7 @@ public class Client {
     private SelectionKey selectionKey;
     private Parser requestParser = new RequestParser();
     private String userNick;
-    private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new HashMap<>();
+    Map<UUID, ArrayList<byte[]>> requestPacketListMap = new HashMap<>();
     private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new HashMap<>();
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
@@ -50,7 +50,7 @@ public class Client {
     public void clearRequestPacketList(UUID uuid) { this.requestPacketListMap.remove(uuid); }
     public void clearResponsePacketList(UUID uuid) { this.responsePacketListMap.remove(uuid); }
 
-    public Runnable makeWholePacket() {
+    /*public Runnable makeWholePacket() {
         Runnable runnable = () -> {
           try {
               ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
@@ -89,5 +89,5 @@ public class Client {
           }
         };
         return runnable;
-    }
+    }*/
 }

@@ -1,7 +1,11 @@
 package server;
 
+import parser.Parser;
+import util.Constants;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -85,7 +89,41 @@ public class Server {
                     } else if (selectionKey.isReadable()) {
                         selectionKey.interestOps(0);
                         Client client = (Client) selectionKey.attachment();
-                        executorService.submit(client.makeWholePacket());
+
+
+                        ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
+                        int byteCount = client.getSocketChannel().read(byteBuffer);
+
+                        //상대방이 SocketChannel의 close() 메소드를 호출할 경우
+                        if (byteCount == -1) {
+                            System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
+                            Server.setClientList(false,client);
+                            return;
+                        }
+
+                        while ( 0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE){
+                            byteCount += client.getSocketChannel().read(byteBuffer);
+                        }
+
+                        // 정상 동작 시작
+                        byteBuffer.flip();
+                        byte[] requestPacket = byteBuffer.array();
+                        UUID uuid = Parser.getUUID(requestPacket);
+                        if (!client.requestPacketListMap.containsKey(uuid)) {
+                            client.requestPacketListMap.put(uuid, new ArrayList<>());
+                        }
+                        client.requestPacketListMap.get(uuid).add(requestPacket);
+
+                        if (!Parser.isLast(requestPacket)) {
+                            selectionKey.interestOps(SelectionKey.OP_READ);
+                            selector.wakeup();
+                        } else {
+                            Reader reader = new Reader(client);
+                            reader.deployWorker(uuid);
+                        }
+
+
+
                     } else if (selectionKey.isWritable()){
                         selectionKey.interestOps(0);
                         Writer writer = new Writer((Client) selectionKey.attachment());
