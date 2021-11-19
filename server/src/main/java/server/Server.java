@@ -114,8 +114,8 @@ public class Server {
                             byteBuffer.flip();
                             byte[] requestPacket = byteBuffer.array();
                             UUID uuid = Parser.getUUID(requestPacket);
-                            if (!client.getResponsePacketListMap().containsKey(uuid)) {
-                                client.getResponsePacketListMap().put(uuid, new ArrayList<>());
+                            if (!client.getRequestPacketListMap().containsKey(uuid)) {
+                                client.getRequestPacketListMap().put(uuid, new ArrayList<>());
                             }
                             client.getRequestPacketList(uuid).add(requestPacket);
 
@@ -159,6 +159,7 @@ public class Server {
                             executorService.submit(writer.writeToChannel());
                         }
                     }
+
                 }
             } catch (IOException e) {
                 System.out.println("startServer runnable block IOException\n\n\n");

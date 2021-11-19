@@ -35,6 +35,7 @@ public class Client {
         return this.userNick;
     }
     public Map<UUID, ArrayList<byte[]>> getResponsePacketListMap() { return this.responsePacketListMap; }
+    public Map<UUID, ArrayList<byte[]>> getRequestPacketListMap() { return this.requestPacketListMap; }
     public ArrayList<byte[]> getRequestPacketList(UUID uuid) {
         return this.requestPacketListMap.get(uuid);
     }
