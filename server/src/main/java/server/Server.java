@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,6 +19,7 @@ public class Server {
     private static Selector selector;
     private static List<Client> clientList = new CopyOnWriteArrayList<>();
     private static List<String> fileList = new CopyOnWriteArrayList<>();
+    public static Queue<Runnable> queue = new ConcurrentLinkedQueue<Runnable>();
     private static final CompletionHandler<Void, Void> callback = new CompletionHandler<Void, Void>() {
         @Override
         public void completed(Void unused, Void unused2) {
@@ -28,6 +30,7 @@ public class Server {
             System.out.println(throwable.toString());
         }
     };
+
 
     public Server() {
         this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -41,7 +44,6 @@ public class Server {
 
     public static List<Client> getClientList() { return clientList; }
     public static List<String> getFileList() { return fileList; }
-    public static CompletionHandler<Void, Void> getCallback() { return callback; }
     public static void setClientList(boolean add, Client client) {
         if (add) clientList.add(client);
         else clientList.remove(client);
@@ -50,6 +52,8 @@ public class Server {
         if (add) fileList.add(fileName);
         else fileList.remove(fileName);
     }
+
+    public static CompletionHandler<Void, Void> getCallback() { return callback; }
 
     void startServer() {
         try {
@@ -81,53 +85,81 @@ public class Server {
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
                 while (iterator.hasNext()) {
-                    SelectionKey selectionKey = iterator.next();
-                    iterator.remove();
+                    if( queue.peek() != null ){
+                        queue.poll().run();
+                    } else {
+                        SelectionKey selectionKey = iterator.next();
+                        iterator.remove();
 
-                    if (selectionKey.isAcceptable()) {
-                        accept(selectionKey);
-                    } else if (selectionKey.isReadable()) {
-                        selectionKey.interestOps(0);
-                        Client client = (Client) selectionKey.attachment();
+                        if (selectionKey.isAcceptable()) {
+                            accept(selectionKey);
+                        } else if (selectionKey.isReadable()) {
+                            Client client = (Client) selectionKey.attachment();
+
+                            ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
+                            int byteCount = client.getSocketChannel().read(byteBuffer);
+
+                            //상대방이 SocketChannel의 close() 메소드를 호출할 경우
+                            if (byteCount == -1) {
+                                System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
+                                Server.setClientList(false, client);
+                                return;
+                            }
+
+                            while (0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE) {
+                                byteCount += client.getSocketChannel().read(byteBuffer);
+                            }
+
+                            // 정상 동작 시작
+                            byteBuffer.flip();
+                            byte[] requestPacket = byteBuffer.array();
+                            UUID uuid = Parser.getUUID(requestPacket);
+                            if (!client.requestPacketListMap.containsKey(uuid)) {
+                                client.requestPacketListMap.put(uuid, new ArrayList<>());
+                            }
+                            client.requestPacketListMap.get(uuid).add(requestPacket);
+
+                            if (!Parser.isLast(requestPacket)) {
+
+                                Runnable readRunnable = () -> {
+                                    try {
+                                        ByteBuffer buffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
+                                        int count = client.getSocketChannel().read(buffer);
+
+                                        //상대방이 SocketChannel의 close() 메소드를 호출할 경우
+                                        if (count == -1) {
+                                            System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
+                                            Server.setClientList(false, client);
+                                            return;
+                                        }
+
+                                        while (0 < count && count < Constants.PACKET_TOTAL_SIZE) {
+                                            count += client.getSocketChannel().read(buffer);
+                                        }
+
+                                        // 정상 동작 시작
+                                        buffer.flip();
+                                        byte[] packet = buffer.array();
+                                        client.requestPacketListMap.get(uuid).add(packet);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                };
+                                queue.offer(readRunnable);
+
+                                selectionKey.interestOps(SelectionKey.OP_READ);
+                                selector.wakeup();
+                            } else {
+                                Reader reader = new Reader(client);
+                                reader.deployWorker(uuid);
+                            }
 
 
-                        ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
-                        int byteCount = client.getSocketChannel().read(byteBuffer);
-
-                        //상대방이 SocketChannel의 close() 메소드를 호출할 경우
-                        if (byteCount == -1) {
-                            System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
-                            Server.setClientList(false,client);
-                            return;
+                        } else if (selectionKey.isWritable()) {
+                            selectionKey.interestOps(0);
+                            Writer writer = new Writer((Client) selectionKey.attachment());
+                            executorService.submit(writer.writeToChannel());
                         }
-
-                        while ( 0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE){
-                            byteCount += client.getSocketChannel().read(byteBuffer);
-                        }
-
-                        // 정상 동작 시작
-                        byteBuffer.flip();
-                        byte[] requestPacket = byteBuffer.array();
-                        UUID uuid = Parser.getUUID(requestPacket);
-                        if (!client.requestPacketListMap.containsKey(uuid)) {
-                            client.requestPacketListMap.put(uuid, new ArrayList<>());
-                        }
-                        client.requestPacketListMap.get(uuid).add(requestPacket);
-
-                        if (!Parser.isLast(requestPacket)) {
-                            selectionKey.interestOps(SelectionKey.OP_READ);
-                            selector.wakeup();
-                        } else {
-                            Reader reader = new Reader(client);
-                            reader.deployWorker(uuid);
-                        }
-
-
-
-                    } else if (selectionKey.isWritable()){
-                        selectionKey.interestOps(0);
-                        Writer writer = new Writer((Client) selectionKey.attachment());
-                        executorService.submit(writer.writeToChannel());
                     }
                 }
             } catch (IOException e) {
