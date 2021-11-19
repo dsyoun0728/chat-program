@@ -114,10 +114,10 @@ public class Server {
                             byteBuffer.flip();
                             byte[] requestPacket = byteBuffer.array();
                             UUID uuid = Parser.getUUID(requestPacket);
-                            if (!client.requestPacketListMap.containsKey(uuid)) {
-                                client.requestPacketListMap.put(uuid, new ArrayList<>());
+                            if (!client.getResponsePacketListMap().containsKey(uuid)) {
+                                client.getResponsePacketListMap().put(uuid, new ArrayList<>());
                             }
-                            client.requestPacketListMap.get(uuid).add(requestPacket);
+                            client.getRequestPacketList(uuid).add(requestPacket);
 
                             if (!Parser.isLast(requestPacket)) {
 
@@ -140,15 +140,13 @@ public class Server {
                                         // 정상 동작 시작
                                         buffer.flip();
                                         byte[] packet = buffer.array();
-                                        client.requestPacketListMap.get(uuid).add(packet);
+                                        client.getRequestPacketList(uuid).add(packet);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
                                 };
                                 queue.offer(readRunnable);
 
-                                selectionKey.interestOps(SelectionKey.OP_READ);
-                                selector.wakeup();
                             } else {
                                 Reader reader = new Reader(client);
                                 reader.deployWorker(uuid);

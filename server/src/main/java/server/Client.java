@@ -18,7 +18,7 @@ public class Client {
     private SelectionKey selectionKey;
     private Parser requestParser = new RequestParser();
     private String userNick;
-    Map<UUID, ArrayList<byte[]>> requestPacketListMap = new HashMap<>();
+    private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new HashMap<>();
     private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new HashMap<>();
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
