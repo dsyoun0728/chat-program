@@ -81,7 +81,7 @@ public class Server {
         // 클라이언트 접속 시작
         while (true) {
             try {
-                int keyCount = selector.select();
+                selector.select();
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
                 while (iterator.hasNext()) {
@@ -89,7 +89,6 @@ public class Server {
                         queue.poll().run();
                     } else {
                         SelectionKey selectionKey = iterator.next();
-                        iterator.remove();
 
                         if (selectionKey.isAcceptable()) {
                             accept(selectionKey);
@@ -146,7 +145,6 @@ public class Server {
                                     }
                                 };
                                 queue.offer(readRunnable);
-
                             } else {
                                 Reader reader = new Reader(client);
                                 reader.deployWorker(uuid);
@@ -158,6 +156,7 @@ public class Server {
                             Writer writer = new Writer((Client) selectionKey.attachment());
                             executorService.submit(writer.writeToChannel());
                         }
+                        iterator.remove();
                     }
 
                 }
