@@ -1,6 +1,7 @@
 package server;
 
 import parser.Parser;
+import server.worker.Worker;
 import util.Constants;
 
 import java.io.IOException;
@@ -120,7 +121,7 @@ public class Server {
 
                             if (!Parser.isLast(requestPacket)) {
 
-                                Runnable readRunnable = () -> {
+                                /*Runnable readRunnable = () -> {
                                     try {
                                         ByteBuffer buffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
                                         int count = client.getSocketChannel().read(buffer);
@@ -140,21 +141,45 @@ public class Server {
                                         buffer.flip();
                                         byte[] packet = buffer.array();
                                         client.getRequestPacketList(uuid).add(packet);
+
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
                                 };
-                                queue.offer(readRunnable);
+                                queue.offer(readRunnable);*/
                             } else {
                                 Reader reader = new Reader(client);
                                 reader.deployWorker(uuid);
                             }
 
 
+
                         } else if (selectionKey.isWritable()) {
-                            selectionKey.interestOps(0);
-                            Writer writer = new Writer((Client) selectionKey.attachment());
-                            executorService.submit(writer.writeToChannel());
+                            Client client = (Client) selectionKey.attachment();
+                            for (UUID uuid : client.getResponsePacketListMap().keySet()) {
+                                try {
+                                    for (byte[] packet : client.getResponsePacketList(uuid)) {
+                                        int byteCount = 0;
+                                        ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
+                                        while (byteCount < Constants.PACKET_TOTAL_SIZE) {
+                                            byteCount += client.getSocketChannel().write(byteBuffer);
+                                        }
+                                    }
+                                } catch (IOException e) {
+                                    System.out.println("Writer IOException\t\t\t");
+                                    Server.getCallback().failed(e, null);
+                                    e.printStackTrace();
+                                    Worker.handleClientOut(client, uuid);
+                                } catch (Exception e) {
+                                    System.out.println("Writer Exception\n\n\n");
+                                    Server.getCallback().failed(e, null);
+                                    e.printStackTrace();
+                                }
+                                client.clearRequestPacketList(uuid);
+                                client.clearResponsePacketList(uuid);
+                            }
+                            selectionKey.interestOps(SelectionKey.OP_READ);
+                            selector.wakeup();
                         }
                         iterator.remove();
                     }
