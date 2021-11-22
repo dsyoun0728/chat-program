@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    private ExecutorService executorService;
+    public ExecutorService executorService;
     private ServerSocketChannel serverSocketChannel;
     private static Selector selector;
     private static List<Client> clientList = new CopyOnWriteArrayList<>();
@@ -153,33 +153,36 @@ public class Server {
                             }
 
 
-
                         } else if (selectionKey.isWritable()) {
+                            selectionKey.interestOps(0);
                             Client client = (Client) selectionKey.attachment();
-                            for (UUID uuid : client.getResponsePacketListMap().keySet()) {
-                                try {
-                                    for (byte[] packet : client.getResponsePacketList(uuid)) {
-                                        int byteCount = 0;
-                                        ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-                                        while (byteCount < Constants.PACKET_TOTAL_SIZE) {
-                                            byteCount += client.getSocketChannel().write(byteBuffer);
+                            Runnable runnable = () -> {
+                                for (UUID uuid : client.getResponsePacketListMap().keySet()) {
+                                    try {
+                                        for (byte[] packet : client.getResponsePacketList(uuid)) {
+                                            int byteCount = 0;
+                                            ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
+                                            while (byteCount < Constants.PACKET_TOTAL_SIZE) {
+                                                byteCount += client.getSocketChannel().write(byteBuffer);
+                                            }
                                         }
+                                    } catch (IOException e) {
+                                        System.out.println("Writer IOException\t\t\t");
+                                        Server.getCallback().failed(e, null);
+                                        e.printStackTrace();
+                                        Worker.handleClientOut(client, uuid);
+                                    } catch (Exception e) {
+                                        System.out.println("Writer Exception\n\n\n");
+                                        Server.getCallback().failed(e, null);
+                                        e.printStackTrace();
                                     }
-                                } catch (IOException e) {
-                                    System.out.println("Writer IOException\t\t\t");
-                                    Server.getCallback().failed(e, null);
-                                    e.printStackTrace();
-                                    Worker.handleClientOut(client, uuid);
-                                } catch (Exception e) {
-                                    System.out.println("Writer Exception\n\n\n");
-                                    Server.getCallback().failed(e, null);
-                                    e.printStackTrace();
+                                    client.clearRequestPacketList(uuid);
+                                    client.clearResponsePacketList(uuid);
                                 }
-                                client.clearRequestPacketList(uuid);
-                                client.clearResponsePacketList(uuid);
-                            }
-                            selectionKey.interestOps(SelectionKey.OP_READ);
-                            selector.wakeup();
+                                selectionKey.interestOps(SelectionKey.OP_READ);
+                                selector.wakeup();
+                            };
+                            executorService.submit(runnable);
                         }
                         iterator.remove();
                     }

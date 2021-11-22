@@ -9,6 +9,7 @@ import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
 import java.util.UUID;
 
+/*
 public class Writer {
     private Client client;
 
@@ -46,3 +47,4 @@ public class Writer {
         return runnable;
     }
 }
+*/
