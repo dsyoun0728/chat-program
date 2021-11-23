@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Client {
+
     private SocketChannel socketChannel;
     private SelectionKey selectionKey;
     private Parser requestParser = new RequestParser();

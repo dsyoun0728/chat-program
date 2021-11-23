@@ -31,6 +31,7 @@ public class Server {
             System.out.println(throwable.toString());
         }
     };
+    boolean isQueueRun = false;
 
 
     public Server() {
@@ -82,81 +83,61 @@ public class Server {
         // 클라이언트 접속 시작
         while (true) {
             try {
-                selector.select();
-                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+                if(queue.peek() != null){
+                    queue.poll().run();
+                }
+                    selector.selectNow();
+                    Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
-                while (iterator.hasNext()) {
-                    if( queue.peek() != null ){
-                        queue.poll().run();
-                    } else {
+                    while (iterator.hasNext()) {
                         SelectionKey selectionKey = iterator.next();
 
                         if (selectionKey.isAcceptable()) {
                             accept(selectionKey);
                         } else if (selectionKey.isReadable()) {
+                            selectionKey.interestOps(0);
                             Client client = (Client) selectionKey.attachment();
-
-                            ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
-                            int byteCount = client.getSocketChannel().read(byteBuffer);
-
-                            //상대방이 SocketChannel의 close() 메소드를 호출할 경우
-                            if (byteCount == -1) {
-                                System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
-                                Server.setClientList(false, client);
-                                return;
-                            }
-
-                            while (0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE) {
-                                byteCount += client.getSocketChannel().read(byteBuffer);
-                            }
-
-                            // 정상 동작 시작
-                            byteBuffer.flip();
-                            byte[] requestPacket = byteBuffer.array();
-                            UUID uuid = Parser.getUUID(requestPacket);
-                            if (!client.getRequestPacketListMap().containsKey(uuid)) {
-                                client.getRequestPacketListMap().put(uuid, new ArrayList<>());
-                            }
-                            client.getRequestPacketList(uuid).add(requestPacket);
-
-                            if (!Parser.isLast(requestPacket)) {
-
-                                /*Runnable readRunnable = () -> {
-                                    try {
-                                        ByteBuffer buffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
-                                        int count = client.getSocketChannel().read(buffer);
-
-                                        //상대방이 SocketChannel의 close() 메소드를 호출할 경우
-                                        if (count == -1) {
-                                            System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
-                                            Server.setClientList(false, client);
-                                            return;
-                                        }
-
-                                        while (0 < count && count < Constants.PACKET_TOTAL_SIZE) {
-                                            count += client.getSocketChannel().read(buffer);
-                                        }
-
-                                        // 정상 동작 시작
-                                        buffer.flip();
-                                        byte[] packet = buffer.array();
-                                        client.getRequestPacketList(uuid).add(packet);
-
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
+                            Runnable readRunnable = () -> {
+                                try {
+                                    ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
+                                    int byteCount = 0;
+                                    byteCount = client.getSocketChannel().read(byteBuffer);
+                                    //상대방이 SocketChannel의 close() 메소드를 호출할 경우
+                                    if (byteCount == -1) {
+                                        System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
+                                        Server.setClientList(false, client);
+                                        return;
                                     }
-                                };
-                                queue.offer(readRunnable);*/
-                            } else {
-                                Reader reader = new Reader(client);
-                                reader.deployWorker(uuid);
-                            }
 
+                                    while (0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE) {
+                                        byteCount += client.getSocketChannel().read(byteBuffer);
+                                    }
+
+                                    // 정상 동작 시작
+                                    byteBuffer.flip();
+                                    byte[] requestPacket = byteBuffer.array();
+                                    UUID uuid = Parser.getUUID(requestPacket);
+                                    if (!client.getRequestPacketListMap().containsKey(uuid)) {
+                                        client.getRequestPacketListMap().put(uuid, new ArrayList<>());
+                                    }
+                                    client.getRequestPacketList(uuid).add(requestPacket);
+                                    if (Parser.isLast(requestPacket)) {
+                                        Reader reader = new Reader(client);
+                                        reader.deployWorker(uuid);
+                                    } else {
+                                        selectionKey.interestOps(SelectionKey.OP_READ);
+                                        selector.wakeup();
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            };
+                            queue.offer(readRunnable);
 
                         } else if (selectionKey.isWritable()) {
                             selectionKey.interestOps(0);
                             Client client = (Client) selectionKey.attachment();
-                            Runnable runnable = () -> {
+                            Runnable writeRunnable = () -> {
                                 for (UUID uuid : client.getResponsePacketListMap().keySet()) {
                                     try {
                                         for (byte[] packet : client.getResponsePacketList(uuid)) {
@@ -182,12 +163,11 @@ public class Server {
                                 selectionKey.interestOps(SelectionKey.OP_READ);
                                 selector.wakeup();
                             };
-                            executorService.submit(runnable);
+                            queue.offer(writeRunnable);
                         }
                         iterator.remove();
                     }
 
-                }
             } catch (IOException e) {
                 System.out.println("startServer runnable block IOException\n\n\n");
                 e.printStackTrace();

@@ -83,7 +83,7 @@ public interface Parser {
     }
 
     // total packet number 확인하기
-    public static  int getTotalPacketNumber(byte[] byteArray) {
+    public static int getTotalPacketNumber(byte[] byteArray) {
         return byteArrayToInt(
                 sliceByteArray(byteArray, 0, Constants.PACKET_TOTAL_PACKET_NUMBER_SIZE)
         );
