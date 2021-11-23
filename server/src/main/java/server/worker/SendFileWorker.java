@@ -7,7 +7,6 @@ import server.Server;
 import util.Constants;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,8 +50,8 @@ public class SendFileWorker implements Worker {
                 "Server> 파일 수신이 완료되었습니다".getBytes(StandardCharsets.UTF_8),
                 "".getBytes(StandardCharsets.UTF_8)
         );
-        this.client.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
-        this.client.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
-        Server.getCallback().completed(null, null);
+
+        Server.getQueue().offer(Worker.createWriteRunnable(this.client, responsePacket.responsePacketList));
+        this.client.clearRequestPacketList(this.uuid);
     }
 }

@@ -8,7 +8,6 @@ import util.Constants;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.UUID;
@@ -56,8 +55,7 @@ public class DownloadFileWorker implements Worker {
             );
         }
 
-        this.client.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
-        this.client.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
-        Server.getCallback().completed(null, null);
+        Server.getQueue().offer(Worker.createWriteRunnable(this.client, responsePacket.responsePacketList));
+        this.client.clearRequestPacketList(this.uuid);
     }
 }

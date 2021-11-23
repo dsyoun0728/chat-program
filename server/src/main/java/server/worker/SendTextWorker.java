@@ -6,7 +6,6 @@ import server.Client;
 import server.Server;
 import util.Constants;
 
-import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -35,12 +34,8 @@ public class SendTextWorker implements Worker{
                         contentsStr.getBytes(StandardCharsets.UTF_8),
                         this.client.getUserNick().getBytes(StandardCharsets.UTF_8)
                 );
-                c.setResponsePacketList(uuidForOther, responsePacket.responsePacketList);
-                c.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
-            } else {
-                c.getSelectionKey().interestOps(SelectionKey.OP_READ);
+                Server.getQueue().offer(Worker.createWriteRunnable(c, responsePacket.responsePacketList));
             }
         }
-        Server.getCallback().completed(null, null);
     }
 }

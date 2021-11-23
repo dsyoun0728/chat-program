@@ -47,10 +47,7 @@ public class Reader {
                     if (Parser.isLast(responsePacket)) {
                         ParsedMsg parsedMsg = this.client.getResponseParser().parseMessage(this.client.getResponsePacketList(uuid));
                         if (functionName.equals("DownloadFile")) {
-                            System.out.println("DownloadFile" + parsedMsg.getUuid().toString());
-
                             String fileName = new String(parsedMsg.getOptionalInfo(), StandardCharsets.UTF_8);
-                            System.out.println("fileName: " + fileName);
                             String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/_.]";
                             fileName = fileName.replaceAll(match, "");
                             Path path = Paths.get("../" + fileName +"_download");

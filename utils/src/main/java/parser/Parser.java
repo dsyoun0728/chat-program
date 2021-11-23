@@ -18,11 +18,6 @@ public interface Parser {
     // parsedMsg를 반환하는 구현부분
     ParsedMsg parseMessage(ArrayList<byte[]> byteArrayList);
 
-    // parser의 상태 반환
-    static boolean hasWholePacket(ArrayList<byte[]> byteArrayList) {
-        return isLast(byteArrayList.get(byteArrayList.size() - 1));
-    }
-
     // 마지막 packet임을 확인하는 부분
     static boolean isLast(byte[] byteArray) {
         return byteArray[0] == 1;
