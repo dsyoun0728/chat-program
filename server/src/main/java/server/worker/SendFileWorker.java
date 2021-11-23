@@ -29,12 +29,12 @@ public class SendFileWorker implements Worker {
         try {
             byte[] fileBytes = parsedMsg.getContents();
             byte[] optionalInfo = parsedMsg.getOptionalInfo();
-            String filePath = new String(optionalInfo, StandardCharsets.UTF_8);
+            String fileName = new String(optionalInfo, StandardCharsets.UTF_8);
             String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/_.]";
-            filePath = filePath.replaceAll(match, "");
-            Server.setFileList(true, filePath);
+            fileName = fileName.replaceAll(match, "");
+            Server.setFileList(true, fileName);
 
-            Path path = Paths.get("../chat-program-data/" + filePath);
+            Path path = Paths.get("../chat-program-data/" + fileName);
             System.out.println("Server 로컬에 쓰기 작업 중");
             Files.write(path, fileBytes);
             System.out.println("완료");
