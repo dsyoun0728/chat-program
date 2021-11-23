@@ -16,23 +16,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    public ExecutorService executorService;
+    private ExecutorService executorService;
     private ServerSocketChannel serverSocketChannel;
     private static Selector selector;
     private static List<Client> clientList = new CopyOnWriteArrayList<>();
     private static List<String> fileList = new CopyOnWriteArrayList<>();
-    public static Queue<Runnable> queue = new ConcurrentLinkedQueue<Runnable>();
-    private static final CompletionHandler<Void, Void> callback = new CompletionHandler<Void, Void>() {
-        @Override
-        public void completed(Void unused, Void unused2) {
-            selector.wakeup();
-        }
-        @Override
-        public void failed(Throwable throwable, Void unused) {
-            System.out.println(throwable.toString());
-        }
-    };
-    boolean isQueueRun = false;
+    private static Queue<Runnable> queue = new ConcurrentLinkedQueue<Runnable>();
 
     public Server() {
         this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -46,6 +35,7 @@ public class Server {
 
     public static List<Client> getClientList() { return clientList; }
     public static List<String> getFileList() { return fileList; }
+    public static Queue<Runnable> getQueue() { return queue; }
     public static void setClientList(boolean add, Client client) {
         if (add) clientList.add(client);
         else clientList.remove(client);
@@ -54,8 +44,6 @@ public class Server {
         if (add) fileList.add(fileName);
         else fileList.remove(fileName);
     }
-
-    public static CompletionHandler<Void, Void> getCallback() { return callback; }
 
     void startServer() {
         try {
@@ -102,6 +90,7 @@ public class Server {
                         } else if (selectionKey.isReadable()) {
                             selectionKey.interestOps(0);
                             Client client = (Client) selectionKey.attachment();
+
                             Runnable readRunnable = () -> {
                                 try {
                                     ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
@@ -129,50 +118,17 @@ public class Server {
                                     if (Parser.isLast(requestPacket)) {
                                         Reader reader = new Reader(client);
                                         reader.deployWorker(uuid);
-                                    } else {
-                                        selectionKey.interestOps(SelectionKey.OP_READ);
-                                        selector.wakeup();
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
                             };
                             queue.offer(readRunnable);
-
-                        } else if (selectionKey.isWritable()) {
-                            selectionKey.interestOps(0);
-                            Client client = (Client) selectionKey.attachment();
-                            Runnable writeRunnable = () -> {
-                                for (UUID uuid : client.getResponsePacketListMap().keySet()) {
-                                    try {
-                                        for (byte[] packet : client.getResponsePacketList(uuid)) {
-                                            int byteCount = 0;
-                                            ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-                                            while (byteCount < Constants.PACKET_TOTAL_SIZE) {
-                                                byteCount += client.getSocketChannel().write(byteBuffer);
-                                            }
-                                        }
-                                    } catch (IOException e) {
-                                        System.out.println("Writer IOException\t\t\t");
-                                        Server.getCallback().failed(e, null);
-                                        e.printStackTrace();
-                                        Worker.handleClientOut(client, uuid);
-                                    } catch (Exception e) {
-                                        System.out.println("Writer Exception\n\n\n");
-                                        Server.getCallback().failed(e, null);
-                                        e.printStackTrace();
-                                    }
-                                    client.clearRequestPacketList(uuid);
-                                    client.clearResponsePacketList(uuid);
-                                }
-                                selectionKey.interestOps(SelectionKey.OP_READ);
-                                selector.wakeup();
-                            };
-                            queue.offer(writeRunnable);
+                            selectionKey.interestOps(SelectionKey.OP_READ);
+                            selector.wakeup();
                         }
                         iterator.remove();
                     }
-
             } catch (IOException e) {
                 System.out.println("startServer runnable block IOException\n\n\n");
                 e.printStackTrace();
