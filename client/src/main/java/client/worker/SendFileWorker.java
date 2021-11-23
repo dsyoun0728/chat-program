@@ -28,18 +28,18 @@ public class SendFileWorker implements Worker{
         byte[] fileContent = new byte[0];
         try {
             fileContent = Files.readAllBytes(file.toPath());
+
+            String[] filePathArray = filePath.split("/");
+            String fileName = filePathArray[filePathArray.length - 1];
+
+            RequestPacket requestPacket = new RequestPacket(
+                    "SendFile",
+                    fileContent,
+                    fileName.getBytes(StandardCharsets.UTF_8)
+            );
+            this.writer.writeToChannel(requestPacket.requestPacketList);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("존재하지 않는 파일입니다. 파일 경로를 다시 입력해주세요.");
         }
-
-        String[] filePathArray = filePath.split("/");
-        String fileName = filePathArray[filePathArray.length - 1];
-
-        RequestPacket requestPacket = new RequestPacket(
-                "SendFile",
-                fileContent,
-                fileName.getBytes(StandardCharsets.UTF_8)
-        );
-        this.writer.writeToChannel(requestPacket.requestPacketList);
     }
 }
