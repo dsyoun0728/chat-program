@@ -46,7 +46,5 @@ public class ShowFileListWorker implements Worker {
         }
 
         this.client.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
-        this.client.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
-        Server.getCallback().completed(null, null);
     }
 }

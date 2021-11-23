@@ -7,6 +7,7 @@ import util.Constants;
 import util.Function;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -34,11 +35,11 @@ public interface Worker {
                 c.clearRequestPacketList(uuid);
                 c.getSocketChannel().close();
                 Server.setClientList(false, client);
-                Server.getCallback().completed(null, null);
+                Server.getSelector().wakeup();
             }
         } catch (IOException e) {
             System.out.println("socketChannel close IOException\n\n\n");
-            Server.getCallback().failed(e, null);
+            Server.getSelector().wakeup();
             e.printStackTrace();
         }
     }

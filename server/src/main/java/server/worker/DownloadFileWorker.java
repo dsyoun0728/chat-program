@@ -28,12 +28,12 @@ public class DownloadFileWorker implements Worker {
         ResponsePacket responsePacket;
         String filePath = "../chat-program-data/";
         String fileName = new String(parsedMsg.getContents(), StandardCharsets.UTF_8);
-        if (Server.getFileList().isEmpty()) {
+        if (!Server.getFileList().contains(fileName)) {
             responsePacket = new ResponsePacket(
                     this.uuid,
                     (byte) Constants.RESPONSE_SUCCESS,
-                    parsedMsg.getFunctionName(),
-                    "file이 없습니다".getBytes(StandardCharsets.UTF_8),
+                    "SendText",
+                    "그런 file은 없습니다. 다시 입력해주세요.".getBytes(StandardCharsets.UTF_8),
                     "".getBytes(StandardCharsets.UTF_8)
             );
         } else {
@@ -57,7 +57,5 @@ public class DownloadFileWorker implements Worker {
         }
 
         this.client.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
-        this.client.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
-        Server.getCallback().completed(null, null);
     }
 }

@@ -52,7 +52,5 @@ public class SendFileWorker implements Worker {
                 "".getBytes(StandardCharsets.UTF_8)
         );
         this.client.setResponsePacketList(this.uuid, responsePacket.responsePacketList);
-        this.client.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
-        Server.getCallback().completed(null, null);
     }
 }

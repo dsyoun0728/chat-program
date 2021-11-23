@@ -49,6 +49,5 @@ public class LoginWorker implements Worker{
             }
             c.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
         }
-        Server.getCallback().completed(null, null);
     }
 }

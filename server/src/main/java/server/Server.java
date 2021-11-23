@@ -16,23 +16,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    public ExecutorService executorService;
+    private ExecutorService executorService;
     private ServerSocketChannel serverSocketChannel;
     private static Selector selector;
     private static List<Client> clientList = new CopyOnWriteArrayList<>();
     private static List<String> fileList = new CopyOnWriteArrayList<>();
     public static Queue<Runnable> queue = new ConcurrentLinkedQueue<Runnable>();
-    private static final CompletionHandler<Void, Void> callback = new CompletionHandler<Void, Void>() {
-        @Override
-        public void completed(Void unused, Void unused2) {
-            selector.wakeup();
-        }
-        @Override
-        public void failed(Throwable throwable, Void unused) {
-            System.out.println(throwable.toString());
-        }
-    };
-    boolean isQueueRun = false;
 
     public Server() {
         this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -44,6 +33,7 @@ public class Server {
         }
     }
 
+    public static Selector getSelector() { return selector; }
     public static List<Client> getClientList() { return clientList; }
     public static List<String> getFileList() { return fileList; }
     public static void setClientList(boolean add, Client client) {
@@ -54,8 +44,6 @@ public class Server {
         if (add) fileList.add(fileName);
         else fileList.remove(fileName);
     }
-
-    public static CompletionHandler<Void, Void> getCallback() { return callback; }
 
     void startServer() {
         try {
@@ -129,10 +117,12 @@ public class Server {
                                     if (Parser.isLast(requestPacket)) {
                                         Reader reader = new Reader(client);
                                         reader.deployWorker(uuid);
-                                    } else {
-                                        selectionKey.interestOps(SelectionKey.OP_READ);
-                                        selector.wakeup();
+                                        selectionKey.interestOps(SelectionKey.OP_WRITE);
                                     }
+                                    else {
+                                        selectionKey.interestOps(SelectionKey.OP_READ);
+                                    }
+                                    selector.wakeup();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -154,12 +144,12 @@ public class Server {
                                         }
                                     } catch (IOException e) {
                                         System.out.println("Writer IOException\t\t\t");
-                                        Server.getCallback().failed(e, null);
+                                        System.out.println(e.toString());
                                         e.printStackTrace();
                                         Worker.handleClientOut(client, uuid);
                                     } catch (Exception e) {
                                         System.out.println("Writer Exception\n\n\n");
-                                        Server.getCallback().failed(e, null);
+                                        System.out.println(e.toString());
                                         e.printStackTrace();
                                     }
                                     client.clearRequestPacketList(uuid);

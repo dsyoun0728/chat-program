@@ -41,6 +41,5 @@ public class SendTextWorker implements Worker{
                 c.getSelectionKey().interestOps(SelectionKey.OP_READ);
             }
         }
-        Server.getCallback().completed(null, null);
     }
 }

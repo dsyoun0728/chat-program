@@ -54,7 +54,6 @@ public class LogoutWorker implements Worker {
             c.setResponsePacketList(this.uuid, rp.responsePacketList);
             c.getSelectionKey().interestOps(SelectionKey.OP_WRITE);
         }
-        Server.getCallback().completed(null, null);
 
     }
 }
