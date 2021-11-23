@@ -28,7 +28,7 @@ public class DownloadFileWorker implements Worker {
         ResponsePacket responsePacket;
         String filePath = "../chat-program-data/";
         String fileName = new String(parsedMsg.getContents(), StandardCharsets.UTF_8);
-        if (Server.getFileList().contains(fileName)) {
+        if (!Server.getFileList().contains(fileName)) {
             responsePacket = new ResponsePacket(
                     this.uuid,
                     (byte) Constants.RESPONSE_SUCCESS,
