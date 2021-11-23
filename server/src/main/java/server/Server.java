@@ -142,37 +142,40 @@ public class Server {
                         } else if (selectionKey.isWritable()) {
                             selectionKey.interestOps(0);
                             Client client = (Client) selectionKey.attachment();
-                            Runnable writeRunnable = () -> {
-                                for (UUID uuid : client.getResponsePacketListMap().keySet()) {
-                                    try {
-                                        for (byte[] packet : client.getResponsePacketList(uuid)) {
-                                            int byteCount = 0;
-                                            ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-                                            while (byteCount < Constants.PACKET_TOTAL_SIZE) {
+                            for (UUID uuid : client.getResponsePacketListMap().keySet()) {
+                                for (byte[] packet : client.getResponsePacketList(uuid)) {
+                                    Runnable writeRunnable = () -> {
+                                        int byteCount = 0;
+                                        ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
+                                        while (byteCount < Constants.PACKET_TOTAL_SIZE) {
+                                            try {
                                                 byteCount += client.getSocketChannel().write(byteBuffer);
+                                            } catch (IOException e) {
+                                                System.out.println("Writer IOException\t\t\t");
+                                                Server.getCallback().failed(e, null);
+                                                e.printStackTrace();
+                                                Worker.handleClientOut(client, uuid);
+                                            } catch (Exception e) {
+                                                System.out.println("Writer Exception\n\n\n");
+                                                Server.getCallback().failed(e, null);
+                                                e.printStackTrace();
                                             }
                                         }
-                                    } catch (IOException e) {
-                                        System.out.println("Writer IOException\t\t\t");
-                                        Server.getCallback().failed(e, null);
-                                        e.printStackTrace();
-                                        Worker.handleClientOut(client, uuid);
-                                    } catch (Exception e) {
-                                        System.out.println("Writer Exception\n\n\n");
-                                        Server.getCallback().failed(e, null);
-                                        e.printStackTrace();
-                                    }
+                                    };
+                                    queue.offer(writeRunnable);
                                     client.clearRequestPacketList(uuid);
                                     client.clearResponsePacketList(uuid);
                                 }
-                                selectionKey.interestOps(SelectionKey.OP_READ);
-                                selector.wakeup();
-                            };
-                            queue.offer(writeRunnable);
+                                Runnable selRunnable = () -> {
+                                    selectionKey.interestOps(SelectionKey.OP_READ);
+                                    selector.wakeup();
+                                };
+                                queue.offer(selRunnable);
+                            }
                         }
-                        iterator.remove();
-                    }
 
+                        iterator.remove();
+                }
             } catch (IOException e) {
                 System.out.println("startServer runnable block IOException\n\n\n");
                 e.printStackTrace();
