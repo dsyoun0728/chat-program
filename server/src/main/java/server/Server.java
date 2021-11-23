@@ -1,20 +1,27 @@
 package server;
 
+import parser.Parser;
+import server.worker.Worker;
+import util.Constants;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    private ExecutorService executorService;
+    public ExecutorService executorService;
     private ServerSocketChannel serverSocketChannel;
     private static Selector selector;
     private static List<Client> clientList = new CopyOnWriteArrayList<>();
     private static List<String> fileList = new CopyOnWriteArrayList<>();
+    public static Queue<Runnable> queue = new ConcurrentLinkedQueue<Runnable>();
     private static final CompletionHandler<Void, Void> callback = new CompletionHandler<Void, Void>() {
         @Override
         public void completed(Void unused, Void unused2) {
@@ -25,6 +32,7 @@ public class Server {
             System.out.println(throwable.toString());
         }
     };
+    boolean isQueueRun = false;
 
     public Server() {
         this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -38,7 +46,6 @@ public class Server {
 
     public static List<Client> getClientList() { return clientList; }
     public static List<String> getFileList() { return fileList; }
-    public static CompletionHandler<Void, Void> getCallback() { return callback; }
     public static void setClientList(boolean add, Client client) {
         if (add) clientList.add(client);
         else clientList.remove(client);
@@ -47,6 +54,8 @@ public class Server {
         if (add) fileList.add(fileName);
         else fileList.remove(fileName);
     }
+
+    public static CompletionHandler<Void, Void> getCallback() { return callback; }
 
     void startServer() {
         try {
@@ -79,25 +88,91 @@ public class Server {
         // 클라이언트 접속 시작
         while (true) {
             try {
-                int keyCount = selector.select();
-                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-
-                while (iterator.hasNext()) {
-                    SelectionKey selectionKey = iterator.next();
-                    iterator.remove();
-
-                    if (selectionKey.isAcceptable()) {
-                        accept(selectionKey);
-                    } else if (selectionKey.isReadable()) {
-                        selectionKey.interestOps(0);
-                        Client client = (Client) selectionKey.attachment();
-                        executorService.submit(client.makeWholePacket());
-                    } else if (selectionKey.isWritable()){
-                        selectionKey.interestOps(0);
-                        Writer writer = new Writer((Client) selectionKey.attachment());
-                        executorService.submit(writer.writeToChannel());
-                    }
+                if(queue.peek() != null){
+                    queue.poll().run();
                 }
+                    selector.selectNow();
+                    Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+
+                    while (iterator.hasNext()) {
+                        SelectionKey selectionKey = iterator.next();
+
+                        if (selectionKey.isAcceptable()) {
+                            accept(selectionKey);
+                        } else if (selectionKey.isReadable()) {
+                            selectionKey.interestOps(0);
+                            Client client = (Client) selectionKey.attachment();
+                            Runnable readRunnable = () -> {
+                                try {
+                                    ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
+                                    int byteCount = 0;
+                                    byteCount = client.getSocketChannel().read(byteBuffer);
+                                    //상대방이 SocketChannel의 close() 메소드를 호출할 경우
+                                    if (byteCount == -1) {
+                                        System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
+                                        Server.setClientList(false, client);
+                                        return;
+                                    }
+
+                                    while (0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE) {
+                                        byteCount += client.getSocketChannel().read(byteBuffer);
+                                    }
+
+                                    // 정상 동작 시작
+                                    byteBuffer.flip();
+                                    byte[] requestPacket = byteBuffer.array();
+                                    UUID uuid = Parser.getUUID(requestPacket);
+                                    if (!client.getRequestPacketListMap().containsKey(uuid)) {
+                                        client.getRequestPacketListMap().put(uuid, new ArrayList<>());
+                                    }
+                                    client.getRequestPacketList(uuid).add(requestPacket);
+                                    if (Parser.isLast(requestPacket)) {
+                                        Reader reader = new Reader(client);
+                                        reader.deployWorker(uuid);
+                                    } else {
+                                        selectionKey.interestOps(SelectionKey.OP_READ);
+                                        selector.wakeup();
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            };
+                            queue.offer(readRunnable);
+
+                        } else if (selectionKey.isWritable()) {
+                            selectionKey.interestOps(0);
+                            Client client = (Client) selectionKey.attachment();
+                            Runnable writeRunnable = () -> {
+                                for (UUID uuid : client.getResponsePacketListMap().keySet()) {
+                                    try {
+                                        for (byte[] packet : client.getResponsePacketList(uuid)) {
+                                            int byteCount = 0;
+                                            ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
+                                            while (byteCount < Constants.PACKET_TOTAL_SIZE) {
+                                                byteCount += client.getSocketChannel().write(byteBuffer);
+                                            }
+                                        }
+                                    } catch (IOException e) {
+                                        System.out.println("Writer IOException\t\t\t");
+                                        Server.getCallback().failed(e, null);
+                                        e.printStackTrace();
+                                        Worker.handleClientOut(client, uuid);
+                                    } catch (Exception e) {
+                                        System.out.println("Writer Exception\n\n\n");
+                                        Server.getCallback().failed(e, null);
+                                        e.printStackTrace();
+                                    }
+                                    client.clearRequestPacketList(uuid);
+                                    client.clearResponsePacketList(uuid);
+                                }
+                                selectionKey.interestOps(SelectionKey.OP_READ);
+                                selector.wakeup();
+                            };
+                            queue.offer(writeRunnable);
+                        }
+                        iterator.remove();
+                    }
+
             } catch (IOException e) {
                 System.out.println("startServer runnable block IOException\n\n\n");
                 e.printStackTrace();
