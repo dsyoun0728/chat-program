@@ -20,7 +20,7 @@ public class PacketAndParserIntegrationTest {
 
     @Test
     public void requestPacketContentsTest() {
-        byte[] testByteArray = Parser.getContents(requestPacket.requestPacketList);
+        byte[] testByteArray = requestParser.getContents(requestPacket.requestPacketList);
         Assert.assertTrue(longStr.equals(new String(testByteArray)));
     }
 
