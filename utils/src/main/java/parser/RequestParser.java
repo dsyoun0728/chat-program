@@ -54,23 +54,19 @@ public class RequestParser implements Parser {
     }
 
     @Override
-    public int getTotalPacketNumber(byte[] byteArray) {
-        return Parser.byteArrayToInt(
-                Parser.sliceByteArray(byteArray, 0, Constants.PACKET_TOTAL_PACKET_NUMBER_SIZE)
-        );
-    }
-
-    @Override
     public ParsedMsg parseMessage(ArrayList<byte[]> byteArrayList) {
-        byte[] optionalInfo = this.getOptionalInfo(byteArrayList);
+        byte[] totalOptionalInfo = this.getOptionalInfo(byteArrayList);
+        int realOptionalInfoSize = totalOptionalInfo.length - Constants.PACKET_TOTAL_PACKET_NUMBER_SIZE;
+        byte[] realOptionalInfo = Parser.sliceByteArray(totalOptionalInfo, Constants.PACKET_TOTAL_PACKET_NUMBER_SIZE, realOptionalInfoSize);
+        int totalPacketNumber = Parser.byteArrayToInt(Parser.sliceByteArray(totalOptionalInfo, 0, Constants.PACKET_TOTAL_PACKET_NUMBER_SIZE));
         String status = "";
 
         return new ParsedMsg(
                 Parser.getUUID(byteArrayList.get(0)),
                 Parser.getFunctionName(byteArrayList.get(0)),
                 this.getContents(byteArrayList),
-                optionalInfo,
-                this.getTotalPacketNumber(optionalInfo),
+                realOptionalInfo,
+                totalPacketNumber,
                 status
         );
     }

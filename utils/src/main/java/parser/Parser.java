@@ -15,9 +15,6 @@ public interface Parser {
     // optionalInfo 확인하기
     byte[] getOptionalInfo(ArrayList<byte[]> byteArrayList);
 
-    // total packet number 확인하기
-    int getTotalPacketNumber(byte[] byteArray);
-
     // parsedMsg를 반환하는 구현부분
     ParsedMsg parseMessage(ArrayList<byte[]> byteArrayList);
 

@@ -27,6 +27,7 @@ public class DownloadFileWorker implements Worker {
         ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         ResponsePacket responsePacket;
         String filePath = "../chat-program-data/";
+        String fileName = new String(parsedMsg.getContents(), StandardCharsets.UTF_8);
         if (Server.getFileList().isEmpty()) {
             responsePacket = new ResponsePacket(
                     this.uuid,
@@ -38,7 +39,7 @@ public class DownloadFileWorker implements Worker {
         } else {
             byte[] fileContent = new byte[0];
             try {
-                filePath += new String(parsedMsg.getContents(), StandardCharsets.UTF_8);
+                filePath += fileName;
                 File file = new File(filePath);
                 fileContent = Files.readAllBytes(file.toPath());
             } catch (IOException e) {
@@ -51,7 +52,7 @@ public class DownloadFileWorker implements Worker {
                     (byte) Constants.RESPONSE_SUCCESS,
                     parsedMsg.getFunctionName(),
                     fileContent,
-                    filePath.getBytes(StandardCharsets.UTF_8)
+                    fileName.getBytes(StandardCharsets.UTF_8)
             );
         }
 

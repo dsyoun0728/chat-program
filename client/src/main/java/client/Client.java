@@ -1,61 +1,92 @@
 package client;
 
 import packet.RequestPacket;
-import packet.ResponsePacket;
 import parser.*;
-import util.Constants;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Client {
-    ExecutorService executorService;
-    SocketChannel socketChannel;
-    ArrayList<byte[]> packetByteArrayList = new ArrayList<byte[]>();
-    Parser responseParser = new ResponseParser();
-    static String fileName;
+    private ExecutorService executorService;
+    private SocketChannel socketChannel;
+    private String userNick;
+    private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new ConcurrentHashMap<>();
+    private Parser responseParser = new ResponseParser();
 
-    void startClient(Client client, String ipAndPort, String userNick) {
+    public ExecutorService getExecutorService() {
+        return this.executorService;
+    }
+    public SocketChannel getSocketChannel() {
+        return this.socketChannel;
+    }
+    public String getUserNick() {
+        return this.userNick;
+    }
+    public Map<UUID, ArrayList<byte[]>> getResponsePacketListMap() {
+        return this.responsePacketListMap;
+    }
+    public ArrayList<byte[]> getResponsePacketList(UUID uuid) {
+        return this.responsePacketListMap.get(uuid);
+    }
+    public Parser getResponseParser() {
+        return this.responseParser;
+    }
+
+    public void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
+    }
+    public void setSocketChannel(SocketChannel socketChannel) {
+        this.socketChannel = socketChannel;
+    }
+    public void setUserNick(String userNick) {
+        this.userNick = userNick;
+    }
+    public void initResponsePacketList(UUID uuid, ArrayList<byte[]> responsePacketList) {
+        this.responsePacketListMap.put(uuid, responsePacketList);
+    }
+    public void clearResponsePacketList(UUID uuid) { this.responsePacketListMap.remove(uuid); }
+
+    void startClient(Writer writer, String loginStr) {
         try {
-            executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-            socketChannel = SocketChannel.open();
-            socketChannel.configureBlocking(true);
-            String[] ipAndportArray = ipAndPort.split(":");
-            socketChannel.connect(new InetSocketAddress( ipAndportArray[0], Integer.parseInt(ipAndportArray[1])));
+            this.setExecutorService(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+            this.setSocketChannel(SocketChannel.open());
+            this.getSocketChannel().configureBlocking(true);
+            String[] ipAndPortArray = loginStr.split(" ")[1].split(":");
+            this.setUserNick(loginStr.split(" ")[2]);
+            this.getSocketChannel().connect(new InetSocketAddress( ipAndPortArray[0], Integer.parseInt(ipAndPortArray[1])));
             System.out.println("서버 연결 완료");
-            RequestPacket loginPacket = new RequestPacket(
+            RequestPacket loginRequestPacket = new RequestPacket(
                     "Login",
-                    userNick.getBytes(StandardCharsets.UTF_8),
+                    this.getUserNick().getBytes(StandardCharsets.UTF_8),
                     "".getBytes(StandardCharsets.UTF_8)
             );
-            client.send(loginPacket.requestPacketList);
+            writer.writeToChannel(loginRequestPacket.requestPacketList);
         } catch (IOException e) {
             System.out.println("startClient try-catch block IOException\n\n\n" + e + "\n\n\n");
-            if (socketChannel.isOpen()) { stopClient(); }
+            if (this.getSocketChannel().isOpen()) { stopClient(); }
             return;
         } catch (Exception e) {
             System.out.println("startClient try-catch block Exception\n\n\n" + e + "\n\n\n");
-            if (socketChannel.isOpen()) { stopClient(); }
+            if (this.getSocketChannel().isOpen()) { stopClient(); }
             return;
         }
-        receive();
+
+        Reader reader = new Reader(this);
+        reader.receive();
     }
 
     void stopClient() {
         try {
-            if (socketChannel != null && socketChannel.isOpen()) { socketChannel.close(); }
+            if (this.getSocketChannel() != null && this.getSocketChannel().isOpen()) { this.getSocketChannel().close(); }
         } catch (IOException e) {
             System.out.println("stopClient IOException\n\n\n" + e + "\n\n\n");
         } catch (Exception e) {
@@ -63,156 +94,11 @@ public class Client {
         }
     }
 
-    void receive() {
-        Runnable readRunnable = () -> {
-            while (true) {
-                try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
-
-                    int byteCount = socketChannel.read(byteBuffer);
-                    //System.out.println(byteCount);
-
-                    if (byteCount == -1) {
-                        throw new IOException();
-                    }
-
-                    while ( 0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE ){
-                        byteCount += socketChannel.read(byteBuffer);
-                    }
-                    //System.out.println(byteCount);
-
-                    //System.out.println("[요청 처리: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]");
-
-                    byteBuffer.flip();
-                    byte[] responsePacketByteArray = byteBuffer.array();
-                    packetByteArrayList.add(responsePacketByteArray);
-                    String functionName = Parser.getFunctionName(responsePacketByteArray);
-                    if (Parser.isLast(responsePacketByteArray)) {
-                        if (functionName.equals("DownloadFile")) {
-                            byte[] fileContents = responseParser.getContents(packetByteArrayList);
-                            packetByteArrayList.clear();
-
-                            Path path = Paths.get("../" + Client.fileName +"_download");
-                            System.out.println("로컬에 쓰기 작업 중");
-                            Files.write(path, fileContents);
-                            System.out.println("File Download 완료");
-                        } else if (functionName.equals("Logout")) {
-                            System.out.println("Logout 되었습니다");
-                            stopClient();
-                            break;
-                        } else {
-                            String contentsStr = new String(responseParser.getContents(packetByteArrayList), StandardCharsets.UTF_8);
-                            System.out.println(contentsStr);
-                            packetByteArrayList.clear();
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("서버 통신 안됨");
-                    stopClient();
-                    break;
-                }
-            }
-        };
-        executorService.submit(readRunnable);
-    }
-
-    private void send(ArrayList<byte[]> byteArrayList) {
-        Runnable writeRunnable = () -> {
-            try {
-                String fn = Parser.getFunctionName(byteArrayList.get(0));
-                if (fn.equals("SendFile")) {
-                    System.out.println("파일을 서버에 전송 중입니다....");
-                }
-                for (byte[] byteArray : byteArrayList) {
-                    int sendCount = 0;
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
-                    while (sendCount < Constants.PACKET_TOTAL_SIZE) {
-                        sendCount += socketChannel.write(byteBuffer);
-                    }
-                }
-                if (fn.equals("SendFile")) {
-                    System.out.println("서버가 처리 중입니다....");
-                }
-            } catch (IOException e) {
-                System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
-                stopClient();
-            } catch (Exception e) {
-                System.out.println("client send Exception\n\n\n" + e + "\n\n\n");
-                stopClient();
-            }
-        };
-        executorService.submit(writeRunnable);
-    }
-
-
     public static void main(String[] args) throws IOException {
         Client client = new Client();
         Scanner sc = new Scanner(System.in);
+        SystemInputParser sip = new SystemInputParser(client, sc);
 
-        System.out.println("안녕하세요. 로그인 후 다른 기능들을 이용 가능합니다.");
-        System.out.printf("접속 서버 IP 주소와 Port를 입력하세요(ex. 192.168.14.51:5001 ) > ");
-        String ipAndPort = sc.nextLine();
-
-        System.out.print("userNick을 입력하세요 > ");
-        String userNick;
-        userNick = sc.nextLine();
-        client.startClient(client, ipAndPort, userNick);
-
-        String contentsStr;
-        while(true) {
-            contentsStr = sc.nextLine();
-
-            if ( contentsStr.equals("SendFile") ) {
-                System.out.print("업로드 할 파일 경로를 입력하세요 > ");
-                String filePath;
-                filePath = sc.nextLine();
-
-                File file = new File(filePath);
-                byte[] fileContent = Files.readAllBytes(file.toPath());
-
-                String[] filePathArray = filePath.split("/");
-                filePath = filePathArray[filePathArray.length-1];
-
-                RequestPacket requestPacket = new RequestPacket(
-                        "SendFile",
-                        fileContent,
-                        filePath.getBytes(StandardCharsets.UTF_8)
-                );
-                client.send(requestPacket.requestPacketList);
-            } else if ( contentsStr.equals("ShowFileList") ) {
-                RequestPacket requestPacket = new RequestPacket(
-                        "ShowFileList",
-                        "Temp".getBytes(StandardCharsets.UTF_8),
-                        "".getBytes(StandardCharsets.UTF_8)
-                );
-                client.send(requestPacket.requestPacketList);
-            } else if ( contentsStr.equals("DownloadFile") ) {
-                System.out.print("다운로드 할 파일 이름을 입력하세요 > ");
-                Client.fileName = sc.nextLine();
-
-                RequestPacket requestPacket = new RequestPacket(
-                        "DownloadFile",
-                        Client.fileName.getBytes(StandardCharsets.UTF_8),
-                        "".getBytes(StandardCharsets.UTF_8)
-                );
-                client.send(requestPacket.requestPacketList);
-            } else if ( contentsStr.equals("Logout")){
-                RequestPacket requestPacket = new RequestPacket(
-                        "Logout",
-                        "Temp".getBytes(StandardCharsets.UTF_8),
-                        "".getBytes(StandardCharsets.UTF_8)
-                );
-                client.send(requestPacket.requestPacketList);
-            } else {
-                RequestPacket requestPacket = new RequestPacket(
-                        "SendText",
-                        contentsStr.getBytes(StandardCharsets.UTF_8),
-                        "1".getBytes(StandardCharsets.UTF_8)
-                );
-                client.send(requestPacket.requestPacketList);
-            }
-        }
+        sip.startClient();
     }
-
-
 }
