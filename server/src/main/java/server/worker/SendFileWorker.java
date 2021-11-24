@@ -51,7 +51,7 @@ public class SendFileWorker implements Worker {
                 "".getBytes(StandardCharsets.UTF_8)
         );
 
-        Server.getQueue().offer(Worker.createWriteRunnable(this.client, responsePacket.responsePacketList));
+        Worker.createWriteRunnable(this.client, responsePacket.responsePacketList);
         this.client.clearRequestPacketList(this.uuid);
     }
 }

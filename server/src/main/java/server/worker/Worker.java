@@ -15,27 +15,27 @@ import java.util.UUID;
 public interface Worker {
     void doWork();
 
-    static Runnable createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
-        Runnable writeRunnable = () -> {
-            UUID uuid = Parser.getUUID(packetList.get(0));
-            try {
-                for (byte[] packet : packetList) {
-                    int byteCount = 0;
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-                    while (byteCount < Constants.PACKET_TOTAL_SIZE) {
+    static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
+        UUID uuid = Parser.getUUID(packetList.get(0));
+        for (byte[] packet : packetList) {
+            Runnable writeRunnable = () -> {
+                int byteCount = 0;
+                ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
+                while (byteCount < Constants.PACKET_TOTAL_SIZE) {
+                    try {
                         byteCount += client.getSocketChannel().write(byteBuffer);
+                    } catch (IOException e) {
+                        System.out.println("Writer IOException\t\t\t");
+                        e.printStackTrace();
+                        Worker.handleClientOut(client, uuid);
+                    } catch (Exception e) {
+                        System.out.println("Writer Exception\n\n\n");
+                        e.printStackTrace();
                     }
                 }
-            } catch (IOException e) {
-                System.out.println("Writer IOException\t\t\t");
-                e.printStackTrace();
-                Worker.handleClientOut(client, uuid);
-            } catch (Exception e) {
-                System.out.println("Writer Exception\n\n\n");
-                e.printStackTrace();
-            }
-        };
-        return writeRunnable;
+            };
+            Server.getQueue().offer(writeRunnable);
+        }
     }
 
     static void handleClientOut(Client client, UUID uuid) {
