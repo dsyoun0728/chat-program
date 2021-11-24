@@ -1,7 +1,6 @@
 package server;
 
 import parser.Parser;
-import server.worker.Worker;
 import util.Constants;
 
 import java.io.File;
@@ -100,6 +99,7 @@ public class Server {
                                     if (byteCount == -1) {
                                         System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
                                         Server.setClientList(false, client);
+                                        if (client.getSocketChannel() != null && client.getSocketChannel().isOpen()) client.getSocketChannel().close();
                                         return;
                                     }
 

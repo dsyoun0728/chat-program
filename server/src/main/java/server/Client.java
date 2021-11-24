@@ -26,7 +26,6 @@ public class Client {
     }
 
     public SocketChannel getSocketChannel() { return this.socketChannel; }
-    public SelectionKey getSelectionKey() { return this.selectionKey; }
     public Parser getRequestParser() { return this.requestParser; }
     public String getUserNick() { return this.userNick; }
     public Map<UUID, ArrayList<byte[]>> getRequestPacketListMap() { return this.requestPacketListMap; }

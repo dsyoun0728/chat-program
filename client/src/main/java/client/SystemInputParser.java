@@ -16,7 +16,7 @@ public class SystemInputParser {
         this.writer = new Writer(this.client);
     }
 
-    public void startClient() throws IOException {
+    public void startClient() {
         System.out.println("안녕하세요. 로그인 후 다른 기능들을 이용 가능합니다.");
         System.out.print("접속 서버 IP 주소와 Port, userNick를 입력하세요(ex. Login 192.168.14.51:5001 홍길동) > ");
 

@@ -41,12 +41,6 @@ public class Client {
         return this.responseParser;
     }
 
-    public void setExecutorService(ExecutorService executorService) {
-        this.executorService = executorService;
-    }
-    public void setSocketChannel(SocketChannel socketChannel) {
-        this.socketChannel = socketChannel;
-    }
     public void setUserNick(String userNick) {
         this.userNick = userNick;
     }
@@ -57,8 +51,8 @@ public class Client {
 
     void startClient(Writer writer, String loginStr) {
         try {
-            this.setExecutorService(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
-            this.setSocketChannel(SocketChannel.open());
+            this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            this.socketChannel = SocketChannel.open();
             this.getSocketChannel().configureBlocking(true);
             String[] ipAndPortArray = loginStr.split(" ")[1].split(":");
             this.setUserNick(loginStr.split(" ")[2]);
