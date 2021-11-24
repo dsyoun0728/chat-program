@@ -1,7 +1,6 @@
 package server;
 
 import parser.Parser;
-import server.worker.Worker;
 import util.Constants;
 
 import java.io.File;
