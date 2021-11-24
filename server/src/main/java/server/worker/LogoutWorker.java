@@ -35,7 +35,7 @@ public class LogoutWorker implements Worker {
                 "로그아웃 성공".getBytes(StandardCharsets.UTF_8),
                 "".getBytes(StandardCharsets.UTF_8)
         );
-        Server.getQueue().offer(Worker.createWriteRunnable(this.client, responsePacket.responsePacketList));
+        Worker.createWriteRunnable(this.client, responsePacket.responsePacketList);
         this.client.clearRequestPacketList(this.uuid);
 
         Server.setClientList(false, this.client);
@@ -51,7 +51,7 @@ public class LogoutWorker implements Worker {
                     contentsStr.getBytes(StandardCharsets.UTF_8),
                     "".getBytes(StandardCharsets.UTF_8)
             );
-            Server.getQueue().offer(Worker.createWriteRunnable(c, rp.responsePacketList));
+            Worker.createWriteRunnable(c, rp.responsePacketList);
         }
     }
 }

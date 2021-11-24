@@ -35,7 +35,7 @@ public class LoginWorker implements Worker{
                         ("Server > " + this.client.getUserNick() + " 님이 입장하였습니다.").getBytes(StandardCharsets.UTF_8),
                         "1".getBytes(StandardCharsets.UTF_8)
                 );
-                Server.getQueue().offer(Worker.createWriteRunnable(c, responsePacket.responsePacketList));
+                Worker.createWriteRunnable(c, responsePacket.responsePacketList);
             } else {
                 ResponsePacket responsePacket = new ResponsePacket(
                         this.uuid,
@@ -44,7 +44,7 @@ public class LoginWorker implements Worker{
                         ("Server > " + this.client.getUserNick() + " (으)로 로그인 완료").getBytes(StandardCharsets.UTF_8),
                         "1".getBytes(StandardCharsets.UTF_8)
                 );
-                Server.getQueue().offer(Worker.createWriteRunnable(this.client, responsePacket.responsePacketList));
+                Worker.createWriteRunnable(this.client, responsePacket.responsePacketList);
                 this.client.clearRequestPacketList(this.uuid);
             }
         }
