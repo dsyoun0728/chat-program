@@ -23,7 +23,7 @@ public class DownloadFileWorker implements Worker {
 
     @Override
     public void doWork() {
-        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
+        ParsedMsg parsedMsg = Server.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         ResponsePacket responsePacket;
         String filePath = "../chat-program-data/";
         String fileName = new String(parsedMsg.getContents(), StandardCharsets.UTF_8);

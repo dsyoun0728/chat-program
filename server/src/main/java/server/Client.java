@@ -1,7 +1,5 @@
 package server;
 
-import parser.*;
-
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -14,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Client {
     private SocketChannel socketChannel;
     private SelectionKey selectionKey;
-    private Parser requestParser = new RequestParser();
+
     private String userNick;
     private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new ConcurrentHashMap<>();
 
@@ -26,7 +24,6 @@ public class Client {
     }
 
     public SocketChannel getSocketChannel() { return this.socketChannel; }
-    public Parser getRequestParser() { return this.requestParser; }
     public String getUserNick() { return this.userNick; }
     public Map<UUID, ArrayList<byte[]>> getRequestPacketListMap() { return this.requestPacketListMap; }
     public ArrayList<byte[]> getRequestPacketList(UUID uuid) {

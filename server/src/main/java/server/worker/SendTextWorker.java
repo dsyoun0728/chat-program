@@ -20,7 +20,7 @@ public class SendTextWorker implements Worker{
 
     @Override
     public void doWork() {
-        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
+        ParsedMsg parsedMsg = Server.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         String contentsStr = this.client.getUserNick() + "> ";
         contentsStr += new String(parsedMsg.getContents(), StandardCharsets.UTF_8);
 

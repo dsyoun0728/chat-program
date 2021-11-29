@@ -1,6 +1,7 @@
 package server;
 
 import parser.Parser;
+import parser.RequestParser;
 import util.Constants;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import java.util.concurrent.Executors;
 public class Server {
     private ExecutorService executorService;
     private ServerSocketChannel serverSocketChannel;
+    private static Parser requestParser = new RequestParser();
     private static Selector selector;
     private static List<Client> clientList = new CopyOnWriteArrayList<>();
     private static List<String> fileList = new CopyOnWriteArrayList<>();
@@ -32,6 +34,7 @@ public class Server {
         }
     }
 
+    public static Parser getRequestParser() { return requestParser; }
     public static List<Client> getClientList() { return clientList; }
     public static List<String> getFileList() { return fileList; }
     public static Queue<Runnable> getQueue() { return queue; }

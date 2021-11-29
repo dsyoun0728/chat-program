@@ -22,7 +22,7 @@ public class LogoutWorker implements Worker {
 
     @Override
     public void doWork() {
-        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
+        ParsedMsg parsedMsg = Server.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         try {
             System.out.println("클라이언트 연결 정상적으로 끊김" + this.client.getSocketChannel().getRemoteAddress());
         } catch (IOException e) {

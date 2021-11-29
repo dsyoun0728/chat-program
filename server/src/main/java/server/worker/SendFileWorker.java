@@ -24,7 +24,7 @@ public class SendFileWorker implements Worker {
 
     @Override
     public void doWork() {
-        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
+        ParsedMsg parsedMsg = Server.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         try {
             byte[] fileBytes = parsedMsg.getContents();
             byte[] optionalInfo = parsedMsg.getOptionalInfo();

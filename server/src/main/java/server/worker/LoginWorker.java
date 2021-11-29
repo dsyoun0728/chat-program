@@ -20,7 +20,7 @@ public class LoginWorker implements Worker{
 
     @Override
     public void doWork() {
-        ParsedMsg parsedMsg = this.client.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
+        ParsedMsg parsedMsg = Server.getRequestParser().parseMessage(this.client.getRequestPacketList(this.uuid));
         this.client.setUserNick(new String(parsedMsg.getContents(), StandardCharsets.UTF_8));
 
         // Server에 출력
