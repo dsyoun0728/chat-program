@@ -2,9 +2,11 @@ package client;
 
 import packet.RequestPacket;
 import parser.*;
+import util.Constants;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ public class Client {
     private String userNick;
     private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new ConcurrentHashMap<>();
     private Parser responseParser = new ResponseParser();
+    private ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
 
     public ExecutorService getExecutorService() {
         return this.executorService;
@@ -40,6 +43,7 @@ public class Client {
     public Parser getResponseParser() {
         return this.responseParser;
     }
+    public ByteBuffer getByteBuffer() { return this.byteBuffer; }
 
     public void setExecutorService(ExecutorService executorService) {
         this.executorService = executorService;

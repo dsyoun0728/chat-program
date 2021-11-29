@@ -24,10 +24,14 @@ public class Writer {
                 }
                 for (byte[] byteArray : byteArrayList) {
                     int sendCount = 0;
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
+
+                    client.getByteBuffer().clear();
+                    client.getByteBuffer().put(byteArray);
+                    client.getByteBuffer().flip();
                     while (sendCount < Constants.PACKET_TOTAL_SIZE) {
-                        sendCount += this.client.getSocketChannel().write(byteBuffer);
+                        sendCount += client.getSocketChannel().write(client.getByteBuffer());
                     }
+                    client.getByteBuffer().clear();
                 }
                 if (fn.equals("SendFile")) {
                     System.out.println("서버가 처리 중입니다....");

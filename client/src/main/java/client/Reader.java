@@ -24,19 +24,21 @@ public class Reader {
         Runnable readRunnable = () -> {
             while (true) {
                 try {
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
-                    int byteCount = this.client.getSocketChannel().read(byteBuffer);
+                    int byteCount = this.client.getSocketChannel().read(client.getByteBuffer());
 
                     if (byteCount == -1) {
                         throw new IOException();
                     }
 
                     while ( 0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE ){
-                        byteCount += this.client.getSocketChannel().read(byteBuffer);
+                        byteCount += this.client.getSocketChannel().read(client.getByteBuffer());
                     }
 
-                    byteBuffer.flip();
-                    byte[] responsePacket = byteBuffer.array();
+                    client.getByteBuffer().flip();
+                    byte[] responsePacket = new byte[client.getByteBuffer().remaining()];
+                    client.getByteBuffer().get(responsePacket);
+
+                    client.getByteBuffer().clear();
                     UUID uuid = Parser.getUUID(responsePacket);
                     if (!this.client.getResponsePacketListMap().containsKey(uuid)) {
                         this.client.initResponsePacketList(uuid, new ArrayList<byte[]>());
@@ -65,6 +67,7 @@ public class Reader {
                         }
                         this.client.clearResponsePacketList(uuid);
                     }
+
                 } catch (Exception e) {
                     System.out.println("서버 통신 안됨");
                     this.client.stopClient();

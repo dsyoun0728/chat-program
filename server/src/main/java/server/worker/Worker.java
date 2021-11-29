@@ -16,27 +16,31 @@ public interface Worker {
     void doWork();
 
     static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
-        UUID uuid = Parser.getUUID(packetList.get(0));
-        for (byte[] packet : packetList) {
-            Runnable writeRunnable = () -> {
-                int byteCount = 0;
-                ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-                while (byteCount < Constants.PACKET_TOTAL_SIZE) {
-                    try {
-                        byteCount += client.getSocketChannel().write(byteBuffer);
-                    } catch (IOException e) {
-                        System.out.println("Writer IOException\t\t\t");
-                        e.printStackTrace();
-                        Worker.handleClientOut(client, uuid);
-                    } catch (Exception e) {
-                        System.out.println("Writer Exception\n\n\n");
-                        e.printStackTrace();
+        Runnable writeRunnable = () -> {
+            UUID uuid = Parser.getUUID(packetList.get(0));
+            try {
+                for (byte[] packet : packetList) {
+                    int sendCount = 0;
+                    client.getByteBuffer().clear();
+                    client.getByteBuffer().put(packet);
+                    client.getByteBuffer().flip();
+                    while (sendCount < Constants.PACKET_TOTAL_SIZE) {
+                        sendCount += client.getSocketChannel().write(client.getByteBuffer());
                     }
+                    client.getByteBuffer().clear();
                 }
-            };
-            Server.getQueue().offer(writeRunnable);
-        }
+                } catch (IOException e) {
+                    System.out.println("Writer IOException\t\t\t");
+                    e.printStackTrace();
+                    Worker.handleClientOut(client, uuid);
+                } catch (Exception e) {
+                    System.out.println("Writer Exception\n\n\n");
+                    e.printStackTrace();
+                }
+        };
+        Server.getExecutorService().submit(writeRunnable);
     }
+
 
     static void handleClientOut(Client client, UUID uuid) {
         try {

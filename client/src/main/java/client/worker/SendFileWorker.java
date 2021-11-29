@@ -25,7 +25,7 @@ public class SendFileWorker implements Worker{
         filePath = this.scanner.nextLine();
 
         File file = new File(filePath);
-        byte[] fileContent = new byte[0];
+        byte[] fileContent;
         try {
             fileContent = Files.readAllBytes(file.toPath());
             String[] filePathArray = filePath.split("/");

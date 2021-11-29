@@ -1,8 +1,10 @@
 package server;
 
 import parser.*;
+import util.Constants;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -17,12 +19,14 @@ public class Client {
     private Parser requestParser = new RequestParser();
     private String userNick;
     private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new ConcurrentHashMap<>();
+    private ByteBuffer byteBuffer;
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
         this.socketChannel = socketChannel;
         socketChannel.configureBlocking(false);
         this.selectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
         this.selectionKey.attach(this);
+        this.byteBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE);
     }
 
     public SocketChannel getSocketChannel() { return this.socketChannel; }
@@ -33,7 +37,7 @@ public class Client {
     public ArrayList<byte[]> getRequestPacketList(UUID uuid) {
         return this.requestPacketListMap.get(uuid);
     }
-
+    public ByteBuffer getByteBuffer() { return this.byteBuffer; }
     public void setUserNick(String userNick) { this.userNick = userNick; }
 
     public void clearRequestPacketList(UUID uuid) { this.requestPacketListMap.remove(uuid); }
