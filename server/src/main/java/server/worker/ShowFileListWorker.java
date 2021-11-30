@@ -43,8 +43,7 @@ public class ShowFileListWorker implements Worker {
                     "".getBytes(StandardCharsets.UTF_8)
             );
         }
-
-        Worker.createWriteRunnable(this.client, responsePacket.responsePacketList);
+        this.client.setResponsePacketList(uuid, responsePacket.responsePacketList);
         this.client.clearRequestPacketList(this.uuid);
     }
 }

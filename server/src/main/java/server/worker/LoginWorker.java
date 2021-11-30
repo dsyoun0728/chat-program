@@ -6,6 +6,7 @@ import server.Client;
 import server.Server;
 import util.Constants;
 
+import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 

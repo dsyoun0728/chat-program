@@ -6,10 +6,11 @@ import server.Client;
 import server.Server;
 import util.Constants;
 
+import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-public class SendTextWorker implements Worker{
+public class SendTextWorker implements Worker {
     private Client client;
     private UUID uuid;
 

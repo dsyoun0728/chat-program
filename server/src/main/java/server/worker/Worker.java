@@ -7,7 +7,6 @@ import server.Server;
 import util.Constants;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -21,22 +20,22 @@ public interface Worker {
             try {
                 for (byte[] packet : packetList) {
                     int sendCount = 0;
-                    client.getByteBuffer().clear();
-                    client.getByteBuffer().put(packet);
-                    client.getByteBuffer().flip();
+                    client.getWriteByteBuffer().clear();
+                    client.getWriteByteBuffer().put(packet);
+                    client.getWriteByteBuffer().flip();
                     while (sendCount < Constants.PACKET_TOTAL_SIZE) {
-                        sendCount += client.getSocketChannel().write(client.getByteBuffer());
+                        sendCount += client.getSocketChannel().write(client.getWriteByteBuffer());
                     }
-                    client.getByteBuffer().clear();
+                    client.getWriteByteBuffer().clear();
                 }
-                } catch (IOException e) {
-                    System.out.println("Writer IOException\t\t\t");
-                    e.printStackTrace();
-                    Worker.handleClientOut(client, uuid);
-                } catch (Exception e) {
-                    System.out.println("Writer Exception\n\n\n");
-                    e.printStackTrace();
-                }
+            } catch (IOException e) {
+                System.out.println("Writer IOException\t\t\t");
+                e.printStackTrace();
+                Worker.handleClientOut(client, uuid);
+            } catch (Exception e) {
+                System.out.println("Writer Exception\n\n\n");
+                e.printStackTrace();
+            }
         };
         Server.getExecutorService().submit(writeRunnable);
     }

@@ -5,7 +5,6 @@ import parser.Parser;
 import util.Constants;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,27 +23,30 @@ public class Reader {
         Runnable readRunnable = () -> {
             while (true) {
                 try {
-                    int byteCount = this.client.getSocketChannel().read(client.getByteBuffer());
+                    int byteCount = this.client.getSocketChannel().read(client.getReadByteBuffer());
+                    client.setByteCount(client.getByteCount()+byteCount);
 
-                    if (byteCount == -1) {
+                    if (client.getByteCount() == -1) {
                         throw new IOException();
                     }
 
-                    while ( 0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE ){
-                        byteCount += this.client.getSocketChannel().read(client.getByteBuffer());
+                    if ( 0 < client.getByteCount() && client.getByteCount() < Constants.PACKET_TOTAL_SIZE ){
+                        continue;
                     }
 
-                    client.getByteBuffer().flip();
-                    byte[] responsePacket = new byte[client.getByteBuffer().remaining()];
-                    client.getByteBuffer().get(responsePacket);
+                    client.getReadByteBuffer().flip();
+                    byte[] responsePacket = new byte[client.getReadByteBuffer().remaining()];
+                    client.getReadByteBuffer().get(responsePacket);
 
-                    client.getByteBuffer().clear();
+                    client.getReadByteBuffer().clear();
                     UUID uuid = Parser.getUUID(responsePacket);
                     if (!this.client.getResponsePacketListMap().containsKey(uuid)) {
                         this.client.initResponsePacketList(uuid, new ArrayList<byte[]>());
                     }
                     this.client.getResponsePacketListMap().get(uuid).add(responsePacket);
                     String functionName = Parser.getFunctionName(responsePacket);
+
+                    client.setByteCount(0);
 
                     if (Parser.isLast(responsePacket)) {
                         ParsedMsg parsedMsg = this.client.getResponseParser().parseMessage(this.client.getResponsePacketList(uuid));

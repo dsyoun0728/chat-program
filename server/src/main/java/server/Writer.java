@@ -1,43 +1,42 @@
 package server;
 
-//import server.worker.Worker;
-//import util.Constants;
-//
-//import java.io.IOException;
-//import java.nio.ByteBuffer;
-//import java.util.UUID;
+/*
+import parser.Parser;
+import server.worker.Worker;
+import util.Constants;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.UUID;
 
 
 public class Writer {
     private Client client;
 
-    public Writer(Client client) {
-        this.client = client;
+    static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
+        Runnable writeRunnable = () -> {
+            UUID uuid = Parser.getUUID(packetList.get(0));
+            try {
+                for (byte[] packet : packetList) {
+                    int sendCount = 0;
+                    client.getWriteByteBuffer().clear();
+                    client.getWriteByteBuffer().put(packet);
+                    client.getWriteByteBuffer().flip();
+                    while (sendCount < Constants.PACKET_TOTAL_SIZE) {
+                        sendCount += client.getSocketChannel().write(client.getWriteByteBuffer());
+                    }
+                    client.getWriteByteBuffer().clear();
+                }
+            } catch (IOException e) {
+                System.out.println("Writer IOException\t\t\t");
+                e.printStackTrace();
+                Worker.handleClientOut(client, uuid);
+            } catch (Exception e) {
+                System.out.println("Writer Exception\n\n\n");
+                e.printStackTrace();
+            }
+        };
+        Server.getExecutorService().submit(writeRunnable);
     }
-
-//    public Runnable writeToChannel() {
-//        Runnable runnable = () -> {
-//            for (UUID uuid : this.client.getResponsePacketListMap().keySet()) {
-//                try {
-//                    for (byte[] packet : this.client.getResponsePacketList(uuid)) {
-//                        int byteCount = 0;
-//                        ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-//                        while (byteCount < Constants.PACKET_TOTAL_SIZE) {
-//                            byteCount += this.client.getSocketChannel().write(byteBuffer);
-//                        }
-//                    }
-//                } catch (IOException e) {
-//                    System.out.println("Writer IOException\t\t\t");
-//                    e.printStackTrace();
-//                    Worker.handleClientOut(this.client, uuid);
-//                } catch (Exception e) {
-//                    System.out.println("Writer Exception\n\n\n");
-//                    e.printStackTrace();
-//                }
-//                this.client.clearRequestPacketList(uuid);
-//                this.client.clearResponsePacketList(uuid);
-//            }
-//        };
-//        return runnable;
-//    }
-}
+}*/

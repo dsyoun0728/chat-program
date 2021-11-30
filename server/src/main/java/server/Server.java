@@ -1,6 +1,5 @@
 package server;
 
-import parser.ParsedMsg;
 import parser.Parser;
 import server.worker.Worker;
 import util.Constants;
@@ -10,12 +9,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class Server {
     private static ExecutorService executorService;
@@ -38,6 +33,7 @@ public class Server {
     public static List<Client> getClientList() { return clientList; }
     public static List<String> getFileList() { return fileList; }
     public static Queue<Runnable> getQueue() { return queue; }
+    public static Selector getSelector() { return selector; }
     public static ExecutorService getExecutorService() { return executorService; }
     public static void setClientList(boolean add, Client client) {
         if (add) clientList.add(client);
@@ -94,50 +90,50 @@ public class Server {
                         Client client = (Client) selectionKey.attachment();
                         Runnable readRunnable = () -> {
                             try {
-                                int byteCount = client.getSocketChannel().read(client.getByteBuffer());
+                                int byteCount = client.getSocketChannel().read(client.getReadByteBuffer());
+                                client.setByteCount(client.getByteCount() + byteCount);
 
                                 //상대방이 SocketChannel의 close() 메소드를 호출할 경우
-                                if (byteCount == -1) {
+                                if (client.getByteCount() == -1) {
                                     System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
                                     Server.setClientList(false, client);
                                     return;
                                 }
 
-                                while (0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE) {
-                                    byteCount += client.getSocketChannel().read(client.getByteBuffer());
+                                if (0 < client.getByteCount() && client.getByteCount() < Constants.PACKET_TOTAL_SIZE) {
+                                    selectionKey.interestOps(SelectionKey.OP_READ);
+                                    selector.wakeup();
+                                    return;
                                 }
 
                                 // 정상 동작 시작
-                                client.getByteBuffer().flip();
-                                byte[] requestPacket = new byte[client.getByteBuffer().remaining()];
-                                client.getByteBuffer().get(requestPacket);
+                                client.getReadByteBuffer().flip();
+                                byte[] requestPacket = new byte[client.getReadByteBuffer().remaining()];
+                                client.getReadByteBuffer().get(requestPacket);
 
-                                client.getByteBuffer().clear();
+                                client.getReadByteBuffer().clear();
                                 UUID uuid = Parser.getUUID(requestPacket);
                                 if (!client.getRequestPacketListMap().containsKey(uuid)) {
                                     client.getRequestPacketListMap().put(uuid, new ArrayList<>());
                                 }
                                 client.getRequestPacketList(uuid).add(requestPacket);
-
-                                /*ParsedMsg parsedMsg = client.getRequestParser().parseMessage(client.getRequestPacketList(uuid));
-                                byte[] optionalInfo = parsedMsg.getOptionalInfo();
-                                System.out.println(new String(optionalInfo, StandardCharsets.UTF_8));*/
+                                client.setByteCount(0);
 
                                 if (Parser.isLast(requestPacket)) {
                                     Reader reader = new Reader(client);
                                     reader.deployWorker(uuid);
                                 }
-                                selectionKey.interestOps(SelectionKey.OP_READ);
-                                selector.wakeup();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         };
-                        executorService.submit(readRunnable);
+                        Future future = executorService.submit(readRunnable);
+                        future.get();
+                        selectionKey.interestOps(SelectionKey.OP_READ);
+                        selector.wakeup();
                     }
                     iterator.remove();
                 }
-
             } catch (IOException e) {
                 System.out.println("startServer runnable block IOException\n\n\n");
                 e.printStackTrace();

@@ -4,8 +4,6 @@ import parser.Parser;
 import util.Constants;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 
 public class Writer {
@@ -25,17 +23,17 @@ public class Writer {
                 for (byte[] byteArray : byteArrayList) {
                     int sendCount = 0;
 
-                    client.getByteBuffer().clear();
-                    client.getByteBuffer().put(byteArray);
-                    client.getByteBuffer().flip();
+                    client.getWriteByteBuffer().clear();
+                    client.getWriteByteBuffer().put(byteArray);
+                    client.getWriteByteBuffer().flip();
                     while (sendCount < Constants.PACKET_TOTAL_SIZE) {
-                        sendCount += client.getSocketChannel().write(client.getByteBuffer());
+                        sendCount += client.getSocketChannel().write(client.getWriteByteBuffer());
                     }
-                    client.getByteBuffer().clear();
+                    client.getWriteByteBuffer().clear();
                 }
-                if (fn.equals("SendFile")) {
-                    System.out.println("서버가 처리 중입니다....");
-                }
+            if (fn.equals("SendFile")) {
+                System.out.println("서버가 처리 중입니다....");
+            }
             } catch (IOException e) {
                 System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
                 this.client.stopClient();

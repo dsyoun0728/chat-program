@@ -9,11 +9,9 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -23,7 +21,9 @@ public class Client {
     private String userNick;
     private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new ConcurrentHashMap<>();
     private Parser responseParser = new ResponseParser();
-    private ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
+    private ByteBuffer readByteBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE);
+    private ByteBuffer writeByteBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE);
+    private int byteCount;
 
     public ExecutorService getExecutorService() {
         return this.executorService;
@@ -43,7 +43,9 @@ public class Client {
     public Parser getResponseParser() {
         return this.responseParser;
     }
-    public ByteBuffer getByteBuffer() { return this.byteBuffer; }
+    public ByteBuffer getReadByteBuffer() { return this.readByteBuffer; }
+    public ByteBuffer getWriteByteBuffer() { return this.writeByteBuffer; }
+    public int getByteCount() { return this.byteCount; }
 
     public void setExecutorService(ExecutorService executorService) {
         this.executorService = executorService;
@@ -54,6 +56,7 @@ public class Client {
     public void setUserNick(String userNick) {
         this.userNick = userNick;
     }
+    public void setByteCount(int s) {this.byteCount = s;}
     public void initResponsePacketList(UUID uuid, ArrayList<byte[]> responsePacketList) {
         this.responsePacketListMap.put(uuid, responsePacketList);
     }
@@ -64,6 +67,7 @@ public class Client {
             this.setExecutorService(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
             this.setSocketChannel(SocketChannel.open());
             this.getSocketChannel().configureBlocking(true);
+            this.byteCount=0;
             String[] ipAndPortArray = loginStr.split(" ")[1].split(":");
             this.setUserNick(loginStr.split(" ")[2]);
             this.getSocketChannel().connect(new InetSocketAddress( ipAndPortArray[0], Integer.parseInt(ipAndPortArray[1])));

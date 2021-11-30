@@ -8,6 +8,7 @@ import util.Constants;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.UUID;
@@ -54,7 +55,6 @@ public class DownloadFileWorker implements Worker {
                     fileName.getBytes(StandardCharsets.UTF_8)
             );
         }
-
         Worker.createWriteRunnable(this.client, responsePacket.responsePacketList);
         this.client.clearRequestPacketList(this.uuid);
     }
