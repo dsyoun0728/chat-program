@@ -75,7 +75,10 @@ public class Server {
         // 클라이언트 접속 시작
         while (true) {
             try {
-                selector.select();
+                if (queue.peek()!=null) {
+                    queue.poll().run();
+                }
+                selector.selectNow();
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
                 while (iterator.hasNext()) {

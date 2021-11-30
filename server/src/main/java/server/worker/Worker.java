@@ -38,14 +38,7 @@ public interface Worker {
                     e.printStackTrace();
                 }
             };
-            Future future = Server.getExecutorService().submit(writeRunnable);
-            try {
-                future.get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
+            Server.getQueue().offer(writeRunnable);
         }
     }
 
