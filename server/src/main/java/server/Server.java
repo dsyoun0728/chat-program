@@ -78,10 +78,10 @@ public class Server {
         // 클라이언트 접속 시작
         while (true) {
             try {
-                if(queue.peek() != null){
+                if (queue.peek() != null){
                     queue.poll().run();
                 }
-                    selector.selectNow();
+                    selector.select();
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
                     while (iterator.hasNext()) {
@@ -90,45 +90,45 @@ public class Server {
                         if (selectionKey.isAcceptable()) {
                             accept(selectionKey);
                         } else if (selectionKey.isReadable()) {
-                            selectionKey.interestOps(0);
                             Client client = (Client) selectionKey.attachment();
+                            int byteCount = 0;
+                            try {
+                                byteCount = client.getSocketChannel().read(client.getReadBuffer());
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
 
-                            Runnable readRunnable = () -> {
-                                try {
-                                    ByteBuffer byteBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE);
-                                    int byteCount = 0;
-                                    byteCount = client.getSocketChannel().read(byteBuffer);
-                                    //상대방이 SocketChannel의 close() 메소드를 호출할 경우
-                                    if (byteCount == -1) {
-                                        System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
-                                        Server.setClientList(false, client);
-                                        if (client.getSocketChannel() != null && client.getSocketChannel().isOpen()) client.getSocketChannel().close();
-                                        return;
-                                    }
+                            // 상대방이 SocketChannel의 close() 메소드를 호출할 경우
+                            if (byteCount == -1) {
+                                System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
+                                Server.setClientList(false, client);
+                                if (client.getSocketChannel() != null && client.getSocketChannel().isOpen()) client.getSocketChannel().close();
+                                return;
+                            }
 
-                                    while (0 < byteCount && byteCount < Constants.PACKET_TOTAL_SIZE) {
-                                        byteCount += client.getSocketChannel().read(byteBuffer);
-                                    }
+                            if (client.getReadBuffer().position() >= Constants.PACKET_TOTAL_SIZE) {
+                                // 여기까지 왔다는건 buffer가 packet size 만큼 찼다는 것
+                                client.getReadBuffer().flip();
+                                byte[] requestPacket = new byte[Constants.PACKET_TOTAL_SIZE];
+                                client.getReadBuffer().get(requestPacket, 0, Constants.PACKET_TOTAL_SIZE);
+                                client.getReadBuffer().compact();
 
-                                    // 정상 동작 시작
-                                    byteBuffer.flip();
-                                    byte[] requestPacket = byteBuffer.array();
-                                    UUID uuid = Parser.getUUID(requestPacket);
-                                    if (!client.getRequestPacketListMap().containsKey(uuid)) {
-                                        client.getRequestPacketListMap().put(uuid, new ArrayList<>());
-                                    }
-                                    client.getRequestPacketList(uuid).add(requestPacket);
-                                    if (Parser.isLast(requestPacket)) {
+                                // client에 있는 packetList에 현재 완성된 packet 넣어주는 작업
+                                UUID uuid = Parser.getUUID(requestPacket);
+                                if (!client.getRequestPacketListMap().containsKey(uuid)) {
+                                    client.getRequestPacketListMap().put(uuid, new ArrayList<>());
+                                }
+                                client.getRequestPacketList(uuid).add(requestPacket);
+
+                                // Worker Thread에 맡길 부분
+                                if (Parser.isLast(requestPacket)) {
+                                    Runnable readRunnable = () -> {
                                         Reader reader = new Reader(client);
                                         reader.deployWorker(uuid);
-                                    }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                    };
+                                    executorService.submit(readRunnable);
                                 }
-                            };
-                            queue.offer(readRunnable);
-                            selectionKey.interestOps(SelectionKey.OP_READ);
-                            selector.wakeup();
+                            }
                         }
                         iterator.remove();
                     }
