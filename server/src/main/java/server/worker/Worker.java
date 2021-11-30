@@ -10,15 +10,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public interface Worker {
     void doWork();
 
     static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
-        Runnable writeRunnable = () -> {
-            UUID uuid = Parser.getUUID(packetList.get(0));
-            try {
-                for (byte[] packet : packetList) {
+        UUID uuid = Parser.getUUID(packetList.get(0));
+        for (byte[] packet : packetList) {
+            Runnable writeRunnable = () -> {
+                try {
                     int sendCount = 0;
                     client.getWriteByteBuffer().clear();
                     client.getWriteByteBuffer().put(packet);
@@ -27,17 +29,24 @@ public interface Worker {
                         sendCount += client.getSocketChannel().write(client.getWriteByteBuffer());
                     }
                     client.getWriteByteBuffer().clear();
+                } catch (IOException e) {
+                    System.out.println("Writer IOException\t\t\t");
+                    e.printStackTrace();
+                    Worker.handleClientOut(client, uuid);
+                } catch (Exception e) {
+                    System.out.println("Writer Exception\n\n\n");
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                System.out.println("Writer IOException\t\t\t");
+            };
+            Future future = Server.getExecutorService().submit(writeRunnable);
+            try {
+                future.get();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
-                Worker.handleClientOut(client, uuid);
-            } catch (Exception e) {
-                System.out.println("Writer Exception\n\n\n");
+            } catch (ExecutionException e) {
                 e.printStackTrace();
             }
-        };
-        Server.getExecutorService().submit(writeRunnable);
+        }
     }
 
 
