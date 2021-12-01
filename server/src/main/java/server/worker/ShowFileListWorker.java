@@ -44,7 +44,7 @@ public class ShowFileListWorker implements Worker {
             );
         }
 
-        Worker.createWriteRunnable(this.client, responsePacket.responsePacketList);
+        Worker.createWriteQueue(this.client, responsePacket.responsePacketList);
         this.client.clearRequestPacketList(this.uuid);
     }
 }

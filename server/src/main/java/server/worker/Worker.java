@@ -1,40 +1,38 @@
 package server.worker;
 
 import packet.ResponsePacket;
-import parser.Parser;
 import server.Client;
 import server.Server;
 import util.Constants;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 public interface Worker {
     void doWork();
 
-    static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
-        UUID uuid = Parser.getUUID(packetList.get(0));
+    static void createWriteQueue(Client client, ArrayList<byte[]> packetList) {
         for (byte[] packet : packetList) {
-            Runnable writeRunnable = () -> {
-                int byteCount = 0;
-                ByteBuffer byteBuffer = ByteBuffer.wrap(packet);
-                while (byteCount < Constants.PACKET_TOTAL_SIZE) {
-                    try {
-                        byteCount += client.getSocketChannel().write(byteBuffer);
-                    } catch (IOException e) {
-                        System.out.println("Writer IOException\t\t\t");
-                        e.printStackTrace();
-                        Worker.handleClientOut(client, uuid);
-                    } catch (Exception e) {
-                        System.out.println("Writer Exception\n\n\n");
-                        e.printStackTrace();
-                    }
+            CallableMaker callableMaker = new CallableMaker(client, packet);
+            FutureTask<Integer> futureTask = new FutureTask(callableMaker);
+            Server.getQueue().offer(futureTask);
+            Server.getSelector().wakeup();
+            try {
+                while (futureTask.get() < Constants.PACKET_TOTAL_SIZE) {
+                    callableMaker.setByteCount(futureTask.get());
+                    futureTask = new FutureTask(callableMaker);
+                    Server.getQueue().offer(futureTask);
+                    Server.getSelector().wakeup();
                 }
-            };
-            Server.getQueue().offer(writeRunnable);
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -50,7 +48,7 @@ public interface Worker {
                             (client.getUserNick() + "님의 연결이 종료되었습니다.").getBytes(StandardCharsets.UTF_8),
                             "".getBytes(StandardCharsets.UTF_8)
                     );
-                    createWriteRunnable(c, responsePacket.responsePacketList);
+                    createWriteQueue(c, responsePacket.responsePacketList);
                 }
                 client.getSocketChannel().close();
                 Server.setClientList(false, client);
