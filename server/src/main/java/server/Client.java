@@ -23,6 +23,7 @@ public class Client {
     private ByteBuffer readByteBuffer;
     private ByteBuffer writeByteBuffer;
     private int byteCount;
+    private int sendCount;
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
         this.socketChannel = socketChannel;
@@ -32,6 +33,7 @@ public class Client {
         this.readByteBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE);
         this.writeByteBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE);
         this.byteCount = 0;
+        this.sendCount = 0;
     }
 
     public SocketChannel getSocketChannel() { return this.socketChannel; }
@@ -47,7 +49,9 @@ public class Client {
     public ByteBuffer getReadByteBuffer() { return this.readByteBuffer; }
     public ByteBuffer getWriteByteBuffer() { return this.writeByteBuffer; }
     public int getByteCount() { return this.byteCount; }
+    public int getSendCount() { return this.sendCount; }
     public void setByteCount(int s) { this.byteCount = s; }
+    public void setSendCount(int s) { this.sendCount = s; }
     public void setUserNick(String userNick) { this.userNick = userNick; }
     public void setResponsePacketList(UUID uuid, ArrayList<byte[]> responsePacketList) { this.responsePacketListMap.put(uuid, responsePacketList); };
 

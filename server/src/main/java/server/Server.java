@@ -90,7 +90,6 @@ public class Server {
                         accept(selectionKey);
                     } else if (selectionKey.isReadable()) {
                         selectionKey.interestOps(0);
-                        selector.wakeup();
 
                         Client client = (Client) selectionKey.attachment();
                         Runnable readRunnable = () -> {
@@ -107,7 +106,6 @@ public class Server {
 
                                 if (0 < client.getByteCount() && client.getByteCount() < Constants.PACKET_TOTAL_SIZE) {
                                     selectionKey.interestOps(SelectionKey.OP_READ);
-                                    selector.wakeup();
                                     return;
                                 }
 
@@ -132,9 +130,9 @@ public class Server {
                                 e.printStackTrace();
                             }
                         };
-                        readRunnable.run();
+                        Future future = executorService.submit(readRunnable);
+                        future.get();
                         selectionKey.interestOps(SelectionKey.OP_READ);
-                        selector.wakeup();
                     }
                     iterator.remove();
                 }
