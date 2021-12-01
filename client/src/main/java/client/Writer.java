@@ -26,7 +26,7 @@ public class Writer {
                     client.getWriteByteBuffer().clear();
                     client.getWriteByteBuffer().put(byteArray);
                     client.getWriteByteBuffer().flip();
-                    while (sendCount < Constants.PACKET_TOTAL_SIZE) {
+                    if (sendCount < Constants.PACKET_TOTAL_SIZE) {
                         sendCount += client.getSocketChannel().write(client.getWriteByteBuffer());
                     }
                     client.getWriteByteBuffer().clear();

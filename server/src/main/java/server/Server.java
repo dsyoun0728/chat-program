@@ -76,9 +76,9 @@ public class Server {
         while (true) {
             try {
                 if (queue.peek()!=null) {
-                    queue.poll().run();
+                    executorService.submit(queue.poll());
                 }
-                selector.selectNow();
+                selector.select();
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
                 while (iterator.hasNext()) {
