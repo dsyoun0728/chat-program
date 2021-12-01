@@ -76,9 +76,11 @@ public class Server {
         while (true) {
             try {
                 if (queue.peek()!=null) {
-                    executorService.submit(queue.poll());
+                    queue.poll().run();
+                    selector.selectNow();
+                } else {
+                    selector.select();
                 }
-                selector.select();
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
                 while (iterator.hasNext()) {
@@ -130,8 +132,7 @@ public class Server {
                                 e.printStackTrace();
                             }
                         };
-                        Future future = executorService.submit(readRunnable);
-                        future.get();
+                        readRunnable.run();
                         selectionKey.interestOps(SelectionKey.OP_READ);
                         selector.wakeup();
                     }

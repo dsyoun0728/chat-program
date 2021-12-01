@@ -16,7 +16,7 @@ import java.util.concurrent.Future;
 public interface Worker {
     void doWork();
 
-    static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
+    /*static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
         UUID uuid = Parser.getUUID(packetList.get(0));
         Runnable writeRunnable = () -> {
             for (byte[] packet : packetList) {
@@ -40,9 +40,9 @@ public interface Worker {
             }
         };
         Server.getQueue().offer(writeRunnable);
-    }
+    }*/
 
-    /*static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
+    static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
         UUID uuid = Parser.getUUID(packetList.get(0));
         for (byte[] packet : packetList) {
             Runnable writeRunnable = () -> {
@@ -66,7 +66,7 @@ public interface Worker {
             };
             Server.getQueue().offer(writeRunnable);
         }
-    }*/
+    }
 
 
     static void handleClientOut(Client client, UUID uuid) {
