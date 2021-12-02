@@ -37,15 +37,12 @@ public class Client {
     }
 
     public SocketChannel getSocketChannel() { return this.socketChannel; }
-    public SelectionKey getSelectionKey() { return this.selectionKey; }
     public Parser getRequestParser() { return this.requestParser; }
     public String getUserNick() { return this.userNick; }
     public Map<UUID, ArrayList<byte[]>> getRequestPacketListMap() { return this.requestPacketListMap; }
     public ArrayList<byte[]> getRequestPacketList(UUID uuid) {
         return this.requestPacketListMap.get(uuid);
     }
-    public Map<UUID, ArrayList<byte[]>> getResponsePacketListMap() { return this.responsePacketListMap; }
-    public ArrayList<byte[]> getResponsePacketList(UUID uuid) { return this.responsePacketListMap.get(uuid); }
     public ByteBuffer getReadByteBuffer() { return this.readByteBuffer; }
     public ByteBuffer getWriteByteBuffer() { return this.writeByteBuffer; }
     public int getReadCount() { return this.readCount; }
@@ -56,5 +53,4 @@ public class Client {
     public void setResponsePacketList(UUID uuid, ArrayList<byte[]> responsePacketList) { this.responsePacketListMap.put(uuid, responsePacketList); };
 
     public void clearRequestPacketList(UUID uuid) { this.requestPacketListMap.remove(uuid); }
-    public void clearResponsePacketList(UUID uuid) { this.responsePacketListMap.remove(uuid); }
 }
