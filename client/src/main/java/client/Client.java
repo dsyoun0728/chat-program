@@ -56,7 +56,7 @@ public class Client {
     public void setUserNick(String userNick) {
         this.userNick = userNick;
     }
-    public void setByteCount(int s) {this.byteCount = s;}
+    public void setByteCount(int n) {this.byteCount = n;}
     public void initResponsePacketList(UUID uuid, ArrayList<byte[]> responsePacketList) {
         this.responsePacketListMap.put(uuid, responsePacketList);
     }

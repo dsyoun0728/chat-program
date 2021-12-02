@@ -5,12 +5,15 @@ import parser.Parser;
 import util.Constants;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class Reader {
     private Client client;
@@ -30,7 +33,7 @@ public class Reader {
                         throw new IOException();
                     }
 
-                    if ( 0 < client.getByteCount() && client.getByteCount() < Constants.PACKET_TOTAL_SIZE ){
+                    if (client.getByteCount() < Constants.PACKET_TOTAL_SIZE ){
                         continue;
                     }
 
@@ -41,7 +44,7 @@ public class Reader {
                     client.getReadByteBuffer().clear();
                     UUID uuid = Parser.getUUID(responsePacket);
                     if (!this.client.getResponsePacketListMap().containsKey(uuid)) {
-                        this.client.initResponsePacketList(uuid, new ArrayList<byte[]>());
+                        this.client.initResponsePacketList(uuid, new ArrayList<>());
                     }
                     this.client.getResponsePacketListMap().get(uuid).add(responsePacket);
                     String functionName = Parser.getFunctionName(responsePacket);

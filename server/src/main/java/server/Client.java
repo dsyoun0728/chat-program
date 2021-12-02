@@ -22,8 +22,8 @@ public class Client {
     private Map<UUID, ArrayList<byte[]>> responsePacketListMap = new ConcurrentHashMap<>();
     private ByteBuffer readByteBuffer;
     private ByteBuffer writeByteBuffer;
-    private int byteCount;
-    private int sendCount;
+    private int readCount;
+    private int writeCount;
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
         this.socketChannel = socketChannel;
@@ -32,8 +32,8 @@ public class Client {
         this.selectionKey.attach(this);
         this.readByteBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE);
         this.writeByteBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE);
-        this.byteCount = 0;
-        this.sendCount = 0;
+        this.readCount = 0;
+        this.writeCount = 0;
     }
 
     public SocketChannel getSocketChannel() { return this.socketChannel; }
@@ -48,10 +48,10 @@ public class Client {
     public ArrayList<byte[]> getResponsePacketList(UUID uuid) { return this.responsePacketListMap.get(uuid); }
     public ByteBuffer getReadByteBuffer() { return this.readByteBuffer; }
     public ByteBuffer getWriteByteBuffer() { return this.writeByteBuffer; }
-    public int getByteCount() { return this.byteCount; }
-    public int getSendCount() { return this.sendCount; }
-    public void setByteCount(int s) { this.byteCount = s; }
-    public void setSendCount(int s) { this.sendCount = s; }
+    public int getReadCount() { return this.readCount; }
+    public int getWriteCount() { return this.writeCount; }
+    public void setReadCount(int n) { this.readCount = n; }
+    public void setWriteCount(int n) { this.writeCount = n; }
     public void setUserNick(String userNick) { this.userNick = userNick; }
     public void setResponsePacketList(UUID uuid, ArrayList<byte[]> responsePacketList) { this.responsePacketListMap.put(uuid, responsePacketList); };
 

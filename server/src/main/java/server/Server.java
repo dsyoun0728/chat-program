@@ -1,13 +1,11 @@
 package server;
 
 import parser.Parser;
-import server.worker.Worker;
 import util.Constants;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -92,16 +90,16 @@ public class Server {
                         Client client = (Client) selectionKey.attachment();
                         try {
                             int byteCount = client.getSocketChannel().read(client.getReadByteBuffer());
-                            client.setByteCount(client.getByteCount() + byteCount);
+                            client.setReadCount(client.getReadCount() + byteCount);
 
                             //상대방이 SocketChannel의 close() 메소드를 호출할 경우
-                            if (client.getByteCount() == -1) {
+                            if (client.getReadCount() == -1) {
                                 System.out.println("클라이언트 연결 정상적으로 끊김" + client.getSocketChannel().getRemoteAddress());
                                 Server.setClientList(false, client);
                                 return;
                             }
 
-                            if (0 < client.getByteCount() && client.getByteCount() < Constants.PACKET_TOTAL_SIZE) {
+                            if (0 < client.getReadCount() && client.getReadCount() < Constants.PACKET_TOTAL_SIZE) {
                                 return;
                             }
 
@@ -116,11 +114,14 @@ public class Server {
                                 client.getRequestPacketListMap().put(uuid, new ArrayList<>());
                             }
                             client.getRequestPacketList(uuid).add(requestPacket);
-                            client.setByteCount(0);
+                            client.setReadCount(0);
 
                             if (Parser.isLast(requestPacket)) {
-                                Reader reader = new Reader(client);
-                                reader.deployWorker(uuid);
+                                Runnable readRunnable = () -> {
+                                    Reader reader = new Reader(client);
+                                    reader.deployWorker(uuid);
+                                };
+                                executorService.submit(readRunnable);
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
