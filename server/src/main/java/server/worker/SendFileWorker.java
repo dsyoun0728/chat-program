@@ -33,6 +33,7 @@ public class SendFileWorker implements Worker {
             String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s/_.]";
             fileName = fileName.replaceAll(match, "");
             Server.setFileList(true, fileName);
+
             Path path = Paths.get("../chat-program-data/" + fileName);
             System.out.println("Server 로컬에 쓰기 작업 중");
             Files.write(path, fileBytes);
