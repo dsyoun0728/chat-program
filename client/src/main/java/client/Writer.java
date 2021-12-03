@@ -31,9 +31,9 @@ public class Writer {
                     }
                     client.getWriteByteBuffer().clear();
                 }
-            if (fn.equals("SendFile")) {
-                System.out.println("서버가 처리 중입니다....");
-            }
+                 if (fn.equals("SendFile")) {
+                  System.out.println("서버가 처리 중입니다....");
+                 }
             } catch (IOException e) {
                 System.out.println("client send IOException\n\n\n" + e + "\n\n\n");
                 this.client.stopClient();

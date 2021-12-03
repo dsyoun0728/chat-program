@@ -99,8 +99,8 @@ public class Server {
                                 return;
                             }
 
-                            if (0 < client.getReadCount() && client.getReadCount() < Constants.PACKET_TOTAL_SIZE) {
-                                return;
+                            if (client.getReadCount() < Constants.PACKET_TOTAL_SIZE) {
+                                break;
                             }
 
                             // 정상 동작 시작
