@@ -1,6 +1,5 @@
 package client.worker;
 
-import client.Client;
 import client.Writer;
 import packet.RequestPacket;
 

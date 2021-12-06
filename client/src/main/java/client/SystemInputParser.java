@@ -2,7 +2,6 @@ package client;
 
 import client.worker.*;
 
-import java.io.IOException;
 import java.util.Scanner;
 
 public class SystemInputParser {

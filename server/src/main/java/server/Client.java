@@ -17,7 +17,7 @@ public class Client {
     private SelectionKey selectionKey;
     private String userNick;
     private Map<UUID, ArrayList<byte[]>> requestPacketListMap = new ConcurrentHashMap<>();
-    private ByteBuffer readBuffer = ByteBuffer.allocate(Constants.PACKET_TOTAL_SIZE * 10);
+    private ByteBuffer readBuffer = ByteBuffer.allocateDirect(Constants.PACKET_TOTAL_SIZE * Constants.NUMBER_OF_PACKETS);
 
     public Client(SocketChannel socketChannel, Selector selector) throws IOException {
         this.socketChannel = socketChannel;
