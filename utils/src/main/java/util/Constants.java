@@ -11,6 +11,8 @@ public class Constants {
     public static final int PACKET_TOTAL_PACKET_NUMBER_SIZE = 4;
     public static final int PACKET_RESPONSE_CODE_SIZE = 1;
 
+    public static final int NUMBER_OF_PACKETS = 10;
+
     public static final int RESPONSE_SUCCESS = 20;
 
     public static String getResponseStatus(byte b) {
