@@ -34,7 +34,7 @@ public class SendTextWorker implements Worker{
                         contentsStr.getBytes(StandardCharsets.UTF_8),
                         this.client.getUserNick().getBytes(StandardCharsets.UTF_8)
                 );
-                Worker.createWriteQueue(c, responsePacket.responsePacketList);
+                Worker.createWriteRunnable(c, responsePacket.responsePacketList);
             }
         }
     }

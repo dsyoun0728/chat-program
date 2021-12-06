@@ -55,7 +55,7 @@ public class DownloadFileWorker implements Worker {
             );
         }
 
-        Worker.createWriteQueue(this.client, responsePacket.responsePacketList);
+        Worker.createWriteRunnable(this.client, responsePacket.responsePacketList);
         this.client.clearRequestPacketList(this.uuid);
     }
 }
