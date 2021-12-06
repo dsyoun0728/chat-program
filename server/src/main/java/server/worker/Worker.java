@@ -9,31 +9,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
 
 public interface Worker {
     void doWork();
 
-    static void createWriteQueue(Client client, ArrayList<byte[]> packetList) {
-        for (byte[] packet : packetList) {
-            CallableMaker callableMaker = new CallableMaker(client, packet);
-            FutureTask<Integer> futureTask = new FutureTask(callableMaker);
-            Server.getQueue().offer(futureTask);
-            Server.getSelector().wakeup();
-            try {
-                while (futureTask.get() < Constants.PACKET_TOTAL_SIZE) {
-                    callableMaker.setByteCount(futureTask.get());
-                    futureTask = new FutureTask(callableMaker);
-                    Server.getQueue().offer(futureTask);
-                    Server.getSelector().wakeup();
-                }
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
+        RunnableMaker runnableMaker = new RunnableMaker(client, packetList);
+        Server.getQueue().offer(runnableMaker);
+        Server.getSelector().wakeup();
     }
 
     static void handleClientOut(Client client, UUID uuid) {
@@ -48,7 +31,7 @@ public interface Worker {
                             (client.getUserNick() + "님의 연결이 종료되었습니다.").getBytes(StandardCharsets.UTF_8),
                             "".getBytes(StandardCharsets.UTF_8)
                     );
-                    createWriteQueue(c, responsePacket.responsePacketList);
+                    createWriteRunnable(c, responsePacket.responsePacketList);
                 }
                 client.getSocketChannel().close();
                 Server.setClientList(false, client);
