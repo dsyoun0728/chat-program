@@ -7,7 +7,6 @@ import util.Constants;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -114,28 +113,31 @@ public class Server {
                             return;
                         }
 
+                        // 여기까지 왔다는건 buffer가 packet size 이상 찼다는 것
                         if (client.getReadBuffer().position() >= Constants.PACKET_TOTAL_SIZE) {
-                            // 여기까지 왔다는건 buffer가 packet size 만큼 찼다는 것
+                            int readPacketNum = (int) Math.floor((double) client.getReadBuffer().position() / Constants.PACKET_TOTAL_SIZE);
                             client.getReadBuffer().flip();
-                            byte[] requestPacket = new byte[Constants.PACKET_TOTAL_SIZE];
-                            client.getReadBuffer().get(requestPacket, 0, Constants.PACKET_TOTAL_SIZE);
+                            for (int i = 0; i < readPacketNum; i++) {
+                                byte[] requestPacket = new byte[Constants.PACKET_TOTAL_SIZE];
+                                client.getReadBuffer().get(requestPacket);
+
+                                // client에 있는 packetList에 현재 완성된 packet 넣어주는 작업
+                                UUID uuid = Parser.getUUID(requestPacket);
+                                if (!client.getRequestPacketListMap().containsKey(uuid)) {
+                                    client.getRequestPacketListMap().put(uuid, new ArrayList<>());
+                                }
+                                client.getRequestPacketList(uuid).add(requestPacket);
+
+                                // Worker Thread에 맡길 부분
+                                if (Parser.isLast(requestPacket)) {
+                                    Runnable readRunnable = () -> {
+                                        Reader reader = new Reader(client);
+                                        reader.deployWorker(uuid);
+                                    };
+                                    executorService.submit(readRunnable);
+                                }
+                            }
                             client.getReadBuffer().compact();
-
-                            // client에 있는 packetList에 현재 완성된 packet 넣어주는 작업
-                            UUID uuid = Parser.getUUID(requestPacket);
-                            if (!client.getRequestPacketListMap().containsKey(uuid)) {
-                                client.getRequestPacketListMap().put(uuid, new ArrayList<>());
-                            }
-                            client.getRequestPacketList(uuid).add(requestPacket);
-
-                            // Worker Thread에 맡길 부분
-                            if (Parser.isLast(requestPacket)) {
-                                Runnable readRunnable = () -> {
-                                    Reader reader = new Reader(client);
-                                    reader.deployWorker(uuid);
-                                };
-                                executorService.submit(readRunnable);
-                            }
                         }
                     }
                     iterator.remove();
