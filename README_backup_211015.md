@@ -279,10 +279,10 @@ Git Flow 정책 기반
   <summary>
     클라이언트 사이드의 구현 내용 작성
   </summary>  
-  <div class="client-side-impl-list">    
-    <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 01. 로그인/로그아웃 </h3>
-      <p class="client-side-impl-detail">
+  <div class="slowClient-side-impl-list">    
+    <div class="slowClient-side-impl-item">
+      <h3 class="slowClient-side-impl-name"> 01. 로그인/로그아웃 </h3>
+      <p class="slowClient-side-impl-detail">
         * 1-1. 로그인<br>
         &emsp; - 접속하고자하는 서버의 ip, port, 로그인하고자하는 userId와 사용하고자하는 userNick 입력하여 request<br>
         &emsp;&emsp; - userId는 unique key로써 식별하는데 쓰이고, userNick은 로그인 시마다 다르게 하면 기존 userNick 대체 (key-value 쌍)<br>
@@ -295,9 +295,9 @@ Git Flow 정책 기반
         &emsp; - 어떻게 해야할지 아직 모르는 상황<br><br>
       </p>
     </div>
-    <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 02. 룸 관련 기능 </h3>
-      <p class="client-side-impl-detail">
+    <div class="slowClient-side-impl-item">
+      <h3 class="slowClient-side-impl-name"> 02. 룸 관련 기능 </h3>
+      <p class="slowClient-side-impl-detail">
         * 2-1. 유저 조회 (룸 생성)<br>
         &emsp; - 서버에 룸 생성을 위한 유저 조회 서비스 호출<br>
         &emsp; - response로 온 userMap을 바탕으로 유저 목록 체크박스로 그리기<br><br>
@@ -330,9 +330,9 @@ Git Flow 정책 기반
         &emsp; - 관리자 양도 및 탈퇴 성공 시 룸 목록 갱신 및 이동<br><br>
       </p>
     </div>
-    <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 03. 전송 관련 기능 </h3>
-      <p class="client-side-impl-detail">
+    <div class="slowClient-side-impl-item">
+      <h3 class="slowClient-side-impl-name"> 03. 전송 관련 기능 </h3>
+      <p class="slowClient-side-impl-detail">
         * 3-1. 텍스트 메세지 전송<br>
             &emsp;- '텍스트 메세지 전송' 선택<br>
             &emsp;- roomId + text내용 작성<br> 
@@ -345,9 +345,9 @@ Git Flow 정책 기반
             &emsp;- Response로 Success code 받을시 클라이언트 화면에 '파일 전송 성공' 출력
     </p>
     </div>
-    <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 04. 메세지/파일 관리 기능 </h3>
-      <p class="client-side-impl-detail">
+    <div class="slowClient-side-impl-item">
+      <h3 class="slowClient-side-impl-name"> 04. 메세지/파일 관리 기능 </h3>
+      <p class="slowClient-side-impl-detail">
         * 4-1. 텍스트 메세지 삭제 (클라이언트 단 실시간 반영때문에 구현 여부는 고민)<br>
             &emsp;- '텍스트 메세지 삭제' 선택<br>
             &emsp;- msgId 작성<br>

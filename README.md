@@ -199,10 +199,10 @@ Git Flow 정책 기반
   <summary>
     클라이언트 사이드의 구현 내용 작성
   </summary>  
-  <div class="client-side-impl-list">    
-    <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 01. 로그인/로그아웃 </h3>
-      <p class="client-side-impl-detail">
+  <div class="slowClient-side-impl-list">    
+    <div class="slowClient-side-impl-item">
+      <h3 class="slowClient-side-impl-name"> 01. 로그인/로그아웃 </h3>
+      <p class="slowClient-side-impl-detail">
         * 1-1. 로그인<br>
         &emsp; - 접속하고자하는 서버의 ip, port, 로그인하고자하는 userId와 사용하고자하는 userNick 입력하여 request<br>
         &emsp;&emsp; - userId는 unique key로써 식별하는데 쓰이고, userNick은 로그인 시마다 다르게 하면 기존 userNick 대체 (key-value 쌍)<br>
@@ -215,9 +215,9 @@ Git Flow 정책 기반
         &emsp; - 로그인 화면으로 이동<br><br>
       </p>
     </div>
-    <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 02. 전송 관련 기능 </h3>
-      <p class="client-side-impl-detail">
+    <div class="slowClient-side-impl-item">
+      <h3 class="slowClient-side-impl-name"> 02. 전송 관련 기능 </h3>
+      <p class="slowClient-side-impl-detail">
         * 2-1. 텍스트 메세지 전송<br>
             &emsp;- text input을 받아 서버에 request<br>
             &emsp;- 전송 성공 시 전송내역 보여주기 (broadcast로 뿌려진걸 그려도 될 듯)<br><br>
@@ -227,9 +227,9 @@ Git Flow 정책 기반
             &emsp;- 전송내역 보여주기 (broadcast로 뿌려진걸 그려도 될 듯)<br><br>
     </p>
     </div>
-    <div class="client-side-impl-item">
-      <h3 class="client-side-impl-name"> 03. 파일 관리 기능 </h3>
-      <p class="client-side-impl-detail">
+    <div class="slowClient-side-impl-item">
+      <h3 class="slowClient-side-impl-name"> 03. 파일 관리 기능 </h3>
+      <p class="slowClient-side-impl-detail">
         * 3-1. 파일 목록 조회<br>
             &emsp;- '파일 목록 조회' 기능 입력하면 서버에 request<br>
             &emsp;- 조회에 성공하면 서버에서 날아온 파일 목록 보여주기<br><br>

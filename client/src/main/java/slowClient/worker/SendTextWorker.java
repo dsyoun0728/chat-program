@@ -1,6 +1,6 @@
-package client.worker;
+package slowClient.worker;
 
-import client.Writer;
+import slowClient.Writer;
 import packet.RequestPacket;
 
 import java.nio.charset.StandardCharsets;

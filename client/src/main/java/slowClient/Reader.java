@@ -1,19 +1,16 @@
-package client;
+package slowClient;
 
 import parser.ParsedMsg;
 import parser.Parser;
 import util.Constants;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 public class Reader {
     private Client client;

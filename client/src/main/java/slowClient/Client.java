@@ -1,4 +1,4 @@
-package client;
+package slowClient;
 
 import packet.RequestPacket;
 import parser.*;
@@ -11,7 +11,6 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
