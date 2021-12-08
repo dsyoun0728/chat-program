@@ -100,7 +100,8 @@ public class Server {
                             }
 
                             if (client.getReadCount() < Constants.PACKET_TOTAL_SIZE) {
-                                break;
+                                iterator.remove();
+                                continue;
                             }
 
                             // 정상 동작 시작
