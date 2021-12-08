@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>slowClient</module>
+        <module>client</module>
         <module>server</module>
         <module>utils</module>
         <module>slowClient</module>

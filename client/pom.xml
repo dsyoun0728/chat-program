@@ -10,7 +10,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>slowClient</artifactId>
+    <artifactId>client</artifactId>
     <packaging>jar</packaging>
 
     <build>
