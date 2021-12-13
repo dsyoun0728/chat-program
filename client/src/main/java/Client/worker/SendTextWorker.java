@@ -1,14 +1,14 @@
-package slowClient.worker;
+package Client.worker;
 
-import slowClient.Writer;
+import Client.Writer;
 import packet.RequestPacket;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-public class SendTextWorker implements Worker{
+public class SendTextWorker implements Worker {
     private Scanner scanner;
-    private Writer writer;
+    private Client.Writer writer;
     private String toSendStr;
 
     public SendTextWorker(Scanner scanner, Writer writer, String toSendStr) {

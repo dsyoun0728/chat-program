@@ -1,6 +1,6 @@
-package slowClient;
+package Client;
 
-import slowClient.worker.*;
+import Client.worker.*;
 
 import java.io.IOException;
 import java.util.Scanner;

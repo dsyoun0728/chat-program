@@ -18,8 +18,9 @@ public interface Worker {
     static void createWriteRunnable(Client client, ArrayList<byte[]> packetList) {
         for (byte[] packet : packetList) {
             try {
-                Future future = Server.getExecutorService().submit(new FirstWrite(client,packet));
-                future.get();
+                FirstWrite fw = new FirstWrite(client,packet);
+                fw.write();
+
                 if (client.getWriteCount() < Constants.PACKET_TOTAL_SIZE){
                     Server.getQueue().offer(new MoreWrite(client));
                     Server.getSelector().wakeup();

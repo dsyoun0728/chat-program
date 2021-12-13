@@ -1,4 +1,4 @@
-package slowClient;
+package Client;
 
 import parser.Parser;
 import util.Constants;

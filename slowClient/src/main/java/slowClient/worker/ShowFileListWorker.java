@@ -6,7 +6,7 @@ import packet.RequestPacket;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-public class ShowFileListWorker implements Worker{
+public class ShowFileListWorker implements Worker {
     private Scanner scanner;
     private Writer writer;
 

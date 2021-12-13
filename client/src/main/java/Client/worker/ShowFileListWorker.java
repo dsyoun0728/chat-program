@@ -1,21 +1,24 @@
-package slowClient.worker;
+package Client.worker;
 
-import slowClient.Writer;
+import Client.Writer;
 import packet.RequestPacket;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
-public class LogoutWorker implements Worker{
-    private Writer writer;
+public class ShowFileListWorker implements Worker {
+    private Scanner scanner;
+    private Client.Writer writer;
 
-    public LogoutWorker(Writer writer) {
+    public ShowFileListWorker(Scanner scanner, Writer writer) {
+        this.scanner = scanner;
         this.writer = writer;
     }
 
     @Override
     public void doWork() {
         RequestPacket requestPacket = new RequestPacket(
-                "Logout",
+                "ShowFileList",
                 "Temp".getBytes(StandardCharsets.UTF_8),
                 "".getBytes(StandardCharsets.UTF_8)
         );

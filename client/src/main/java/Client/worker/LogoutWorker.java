@@ -1,12 +1,12 @@
-package slowClient.worker;
+package Client.worker;
 
-import slowClient.Writer;
+import Client.Writer;
 import packet.RequestPacket;
 
 import java.nio.charset.StandardCharsets;
 
 public class LogoutWorker implements Worker {
-    private Writer writer;
+    private Client.Writer writer;
 
     public LogoutWorker(Writer writer) {
         this.writer = writer;

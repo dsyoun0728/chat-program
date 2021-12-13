@@ -4,7 +4,7 @@ import server.Client;
 
 import java.io.IOException;
 
-public class FirstWrite extends Thread{
+public class FirstWrite {
     private Client client;
     private byte[] packet;
 
@@ -13,8 +13,7 @@ public class FirstWrite extends Thread{
         this.packet = packet;
     }
 
-    @Override
-    public void run(){
+    public void write(){
         try {
             client.getWriteByteBuffer().clear();
             client.getWriteByteBuffer().put(packet);

@@ -1,6 +1,6 @@
-package slowClient.worker;
+package Client.worker;
 
-import slowClient.Writer;
+import Client.Writer;
 import packet.RequestPacket;
 
 import java.io.File;
@@ -9,9 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Scanner;
 
-public class SendFileWorker implements Worker{
+public class SendFileWorker implements Worker {
     private Scanner scanner;
-    private Writer writer;
+    private Client.Writer writer;
 
     public SendFileWorker(Scanner scanner, Writer writer) {
         this.scanner = scanner;

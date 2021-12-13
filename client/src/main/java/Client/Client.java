@@ -1,4 +1,4 @@
-package slowClient;
+package Client;
 
 import packet.RequestPacket;
 import parser.*;

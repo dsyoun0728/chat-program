@@ -6,7 +6,7 @@ import packet.RequestPacket;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-public class SendTextWorker implements Worker{
+public class SendTextWorker implements Worker {
     private Scanner scanner;
     private Writer writer;
     private String toSendStr;

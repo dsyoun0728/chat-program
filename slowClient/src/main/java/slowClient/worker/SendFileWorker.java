@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Scanner;
 
-public class SendFileWorker implements Worker{
+public class SendFileWorker implements Worker {
     private Scanner scanner;
     private Writer writer;
 
